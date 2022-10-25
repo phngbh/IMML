@@ -1,3 +1,12 @@
+#' load()
+#'
+#' @description Loading all necessary data, to build the package
+#'
+#' @return
+#' @export
+#'
+#' @examples load()
+
 load <- function(){
 
   # Function to load required data sheets and functions for building the package!
