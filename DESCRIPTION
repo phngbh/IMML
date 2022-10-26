@@ -17,4 +17,5 @@ Imports:
     reshape2
 Depends: 
     dplyr,
-    tidyr
+    tidyr,
+    caret

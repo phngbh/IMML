@@ -24,6 +24,8 @@ load <- function(){
   .GlobalEnv$transcriptomics_processed <- transcriptomics_processed
   .GlobalEnv$metabolomics_processed <- metabolomics_processed
 
+  options(scipen = 999)
+
   library(devtools)
   library(roxygen2)
 }
