@@ -24,6 +24,8 @@ load <- function(){
   .GlobalEnv$transcriptomics_processed <- transcriptomics_processed
   .GlobalEnv$metabolomics_processed <- metabolomics_processed
 
+  .GlobalEnv$IDs <- data_partitioning(phenotypes, sample_IDs)
+
   options(scipen = 999)
 
   library(devtools)

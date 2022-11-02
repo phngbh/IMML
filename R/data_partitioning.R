@@ -1,11 +1,12 @@
-#' Data Partitioning Function
+#' Data Partitioning
 #'
-#' @description Returns a list with all training IDs and feature selection IDs.
+#' @description Returns a list with all training IDs and
+#' a set of 100 shuffled feature selection IDs.
 #'
 #' @author Ulrich Asemann
 #'
 #' @param phenotype_IDs
-#' @param data
+#' @param data_IDs
 #' @param partitioning
 #' @param type
 #'
@@ -15,7 +16,7 @@
 #' @examples
 data_partitioning <-
   function(phenotype_IDs,
-           data,
+           data_IDs,
            partitioning = 0.8,
            type = "training",
            seed = 123) {
@@ -32,14 +33,14 @@ data_partitioning <-
     return_list <- list()
 
     # List of feature selection parts
-    list_names <- colnames(data)
+    list_names <- colnames(data_IDs)
 
     # The IDs used for training and feature selection
     IDs <-
       phenotype_IDs %>% select(inc3) %>% drop_na() %>% rownames() %>% as.double()
 
     # A data frame only with phenotype_IDs, that are used for training and feature selection
-    new_sample_IDs <- data %>% filter(Clinical %in% IDs)
+    new_sample_IDs <- data_IDs %>% filter(Clinical %in% IDs)
 
 
     # Building a list with the training IDs
