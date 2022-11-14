@@ -18,6 +18,7 @@ data_partitioning <-
   function(phenotype_IDs,
            data_IDs,
            partitioning = 0.8,
+           amount = 100,
            type = "training",
            seed = 123) {
     #
@@ -49,7 +50,7 @@ data_partitioning <-
     training_sample_IDs <-
       new_sample_IDs %>% drop_na() %>% select(Clinical)
 
-    # Build a list with the 100 training IDs
+    # Build a list with the training IDs
     for (i in 1:nrow(training_sample_IDs)) {
       training_IDs <- c(training_IDs, training_sample_IDs[i, ])
       tmp_name <- paste("Training", i)
@@ -69,16 +70,17 @@ data_partitioning <-
 
       # Create a data partitioning with "caret"
       data_part <-
-        createDataPartition(unlist(frame), times = 100, p = partitioning)
+        createDataPartition(unlist(frame), times = amount, p = partitioning)
 
       # Go through each of the 100 partitions
       for (j in 1:length(data_part)) {
-        tmp_frame <- frame[(unlist(data_part[j])), ]
-
-
-        # In case of testing, remove the training data from the partition
+        # Build the feature selection lists, depending on training or testing
         if (type == "testing") {
-          tmp_frame <- frame %>% slice(-(unlist(data_part[j])))
+          tmp_frame <- frame[-(unlist(data_part[j])), ]
+        } else if (type == "training") {
+          tmp_frame <- frame[(unlist(data_part[j])), ]
+        } else {
+          return("Please set the type to testing or training!")
         }
 
         # Building the list of the current partition

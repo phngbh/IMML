@@ -8,6 +8,7 @@ data_partitioning(
   phenotype_IDs,
   data_IDs,
   partitioning = 0.8,
+  amount = 100,
   type = "training",
   seed = 123
 )
