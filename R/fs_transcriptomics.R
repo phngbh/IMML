@@ -23,6 +23,7 @@ fs_transcriptomics <-
            low_lev_path,
            seed = 123) {
     # Working with gene_IDs, file from Phong, with annotation for the transcriptomics
+    # Ignored annotation_human_..., maybe implement later
     #
     # Getting the ID sets from the transcriptomics
     train_transcriptomics_IDs <-
@@ -44,10 +45,6 @@ fs_transcriptomics <-
     info <- info %>% transmute(inc3 = as.character(inc3))
 
     modmatrix <- model.matrix( ~ 0 + ., data = info)
-
-    # # Old modmatrix (not used anymore)
-    # modmatrix <- info %>% transmute(inc30 = ifelse(inc3 <= 0, 1, 0),
-    #                                inc31 = ifelse(inc3 <= 1, 1, 0))
 
     # Creating a list for the gsea
     gsea = list(
@@ -75,34 +72,21 @@ fs_transcriptomics <-
         data_IDs %>% filter(Clinical %in% clin_IDs) %>%
         dplyr::select(Transcriptomics) %>% as.list() %>% unlist()
 
-      # return(tmp_transcriptomics_IDs)
-
-      # Showcase for missing values
-      #
-      # tmp_data <-
-      #   transcriptomics_data %>% as.data.frame() %>%
-      #   select(suppressWarnings(one_of(
-      #     as.character(tmp_transcriptomics_IDs)
-      #   )))
-
       # Getting the temporary data needed for calculations
       tmp_data <-
         transcriptomics_data[,!is.na(match(colnames(transcriptomics_data), tmp_transcriptomics_IDs))]
 
       cat("...DE analysis\n")
 
+      # Temporary model matrix
       tmp_mod <- modmatrix[colnames(tmp_data), , drop = FALSE]
 
-
+      # Testing
       if (any(table(tmp_mod[, 1]) < 2) |
           any(table(tmp_mod[, 2]) < 2)) {
         cat("......One of the factor levels has less than 2 observations => Stop!")
         next
       }
-
-      # return(tmp_data)
-
-      # return(tmp_mod)
 
       # lmFit
       fit <- lmFit(tmp_data, tmp_mod)
@@ -116,7 +100,7 @@ fs_transcriptomics <-
 
       tmp <- eBayes(tmp)
 
-      # Useing the topTable function
+      # topTable function
       topde <-
         topTable(tmp, sort.by = "P", n = Inf) %>% mutate(Probe = rownames(.)) %>%
         mutate(Name = gene_anotation$symbol[match(.$Probe, gene_anotation$Probe_Id)],
@@ -397,11 +381,8 @@ fs_transcriptomics <-
             )
           )
 
-        # Removed for the moment, gives multiple lists, that don't make sense
-        # fgseaRes <- kable(fgseaRes)
-
         # Saving the result to the enviroment
-        saveRDS(fgseaRes, "gsea_final.rds")
+        saveRDS(fgseaRes, "trans_gsea_final.rds")
 
 
         # Extract selected features for training
@@ -423,6 +404,6 @@ fs_transcriptomics <-
       })
     })
 
-    return("Feature selection done!")
+    return("Feature selection transcriptomics done!")
 
   }

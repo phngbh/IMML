@@ -20,43 +20,76 @@ load <- function() {
   # options(scipen = 999)
 
 
-  # data to enviroment
+  # General data used for everything
   clinical_processed <-
     readRDS(
-      "C:/Users/ulric/Desktop/Arbeit/R/IMLdata/data/Clinical_data/clinical_processed.rds"
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/data/Clinical_data/clinical_processed.rds"
     )
   sample_IDs <-
-    readRDS("C:/Users/ulric/Desktop/Arbeit/R/IMLdata/supporting_files/sample_IDs.rds")
+    readRDS(
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/supporting_files/sample_IDs.rds"
+    )
   phenotypes <-
-    readRDS("C:/Users/ulric/Desktop/Arbeit/R/IMLdata/supporting_files/phenotypes.rds")
+    readRDS(
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/supporting_files/phenotypes.rds"
+    )
   transcriptomics_processed <-
     readRDS(
-      "C:/Users/ulric/Desktop/Arbeit/R/IMLdata/data/Transcriptomics/transcriptomics_processed.rds"
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/data/Transcriptomics/transcriptomics_processed.rds"
     )
   metabolomics_processed <-
     readRDS(
-      "C:/Users/ulric/Desktop/Arbeit/R/IMLdata/data/Metabolomics/metabolomics_processed.rds"
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/data/Metabolomics/metabolomics_processed.rds"
     )
-  lowest_level_pathways <-
-    readRDS(
-      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/lowest_level_pathways.rds"
-    )
-  Annotation_HumanHT_v3_final <-
-    read.csv(
-      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/Annotation_HumanHT-12v3_final.csv"
-     )
-  gene_information <-
-    readRDS("C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/gene_IDs.rds")
 
+  # Feature Selection Transcriptomics
+  trans_lowest_level_pathways <-
+    readRDS(
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_transcriptomics/trans_lowest_level_pathways.rds"
+    )
+  trans_annotation_HumanHT_v3_final <-
+    read.csv(
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_transcriptomics/trans_annotation_HumanHT-12v3_final.csv"
+    )
+  trans_gene_information <-
+    readRDS(
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_transcriptomics/trans_gene_IDs.rds"
+    )
+
+  # Feature Selection Metabolomics
+  meta_lowest_level_pathways <-
+    readRDS(
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_metabolomics/meta_lowest_level_pathways.rds"
+    )
+  meta_anno_fil <-
+    readRDS(
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_metabolomics/meta_anno_fil.rds"
+    )
+  meta_pathway_list <-
+    readRDS(
+      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_metabolomics/meta_pathway_list.rds"
+    )
+
+
+
+  # General data
   .GlobalEnv$clinical_processed <- clinical_processed
   .GlobalEnv$sample_IDs <- sample_IDs
   .GlobalEnv$phenotypes <- phenotypes
   .GlobalEnv$transcriptomics_processed <- transcriptomics_processed
   .GlobalEnv$metabolomics_processed <- metabolomics_processed
-  .GlobalEnv$lowest_level_pathways <- lowest_level_pathways
-  .GlobalEnv$annotation_HumanHT_v3_final <-
-    Annotation_HumanHT_v3_final
-  .GlobalEnv$gene_information <- gene_information
+
+  # Transcriptomics data
+  .GlobalEnv$trans_lowest_level_pathways <-
+    trans_lowest_level_pathways
+  .GlobalEnv$trans_annotation_HumanHT_v3_final <-
+    trans_annotation_HumanHT_v3_final
+  .GlobalEnv$trans_gene_information <- trans_gene_information
+
+  # Metabolomics data
+  .GlobalEnv$meta_lowest_level_pathways <- meta_lowest_level_pathways
+  .GlobalEnv$meta_pathway_list <- meta_pathway_list
+  .GlobalEnv$meta_anno_fil <- meta_anno_fil
 
   # data_partitioning tables
   .GlobalEnv$training_IDs <-
