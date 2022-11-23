@@ -38,7 +38,7 @@ data_partitioning <-
 
     # The IDs used for training and feature selection
     IDs <-
-      phenotype_IDs %>% select(inc3) %>% drop_na() %>% rownames() %>% as.double()
+      phenotype_IDs %>% dplyr::select(inc3) %>% drop_na() %>% rownames() %>% as.double()
 
     # A data frame only with phenotype_IDs, that are used for training and feature selection
     new_sample_IDs <- data_IDs %>% filter(Clinical %in% IDs)
@@ -48,7 +48,7 @@ data_partitioning <-
 
     # Only using IDs, that have values in all columns and select the training IDs
     training_sample_IDs <-
-      new_sample_IDs %>% drop_na() %>% select(Clinical)
+      new_sample_IDs %>% drop_na() %>% dplyr::select(Clinical)
 
     # Build a list with the training IDs
     for (i in 1:nrow(training_sample_IDs)) {
@@ -66,7 +66,7 @@ data_partitioning <-
     for (i in 1:length(list_names)) {
       # Select one feature and remove all NA values from the new_sample_IDs list
       frame <-
-        new_sample_IDs %>% select(list_names[i], Clinical) %>% drop_na() %>% select(Clinical)
+        new_sample_IDs %>% dplyr::select(list_names[i], Clinical) %>% drop_na() %>% dplyr::select(Clinical)
 
       # Create a data partitioning with "caret"
       data_part <-

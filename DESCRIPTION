@@ -16,9 +16,17 @@ Imports:
     readr,
     reshape2
 Depends: 
+    org.Hs.eg.db,
     dplyr,
     tidyr,
     caret,
     BiocManager,
     limma,
-    ChAMP
+    ChAMP,
+    fgsea,
+    glmnet,
+    themis,
+    pROC,
+    RobustRankAggreg,
+    knitr
+   

@@ -17,7 +17,7 @@ load <- function() {
   library(readr)
 
   # remove exponential notation
-  options(scipen = 999)
+  # options(scipen = 999)
 
 
   # data to enviroment
