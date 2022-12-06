@@ -63,7 +63,7 @@ fs_transcriptomics <-
     # i in 1:length(train_transcriptomics_IDs)
 
 
-    for (i in 1:10) {
+    for (i in 1:length(train_transcriptomics_IDs)) {
       cat("Iter ", i, "\n")
       # Selecting the data_IDs with one set of the data_partitioning
       clin_IDs <- unlist(train_transcriptomics_IDs[[i]])
@@ -159,6 +159,7 @@ fs_transcriptomics <-
           ) %>% arrange(pval) %>% filter(padj < 0.1)
         })
       })
+
       # Test
       if (nrow(fgsea_tmp) == 0) {
         print("No significant pathway found")
@@ -281,26 +282,28 @@ fs_transcriptomics <-
     pwlist_agg$adjP <- pwlist_agg$Score * length(pathways$pw)
     pwlist_agg$adjP <- p.adjust(pwlist_agg$adjP, method = "fdr")
 
-    toppw <- rownames(filter(pwlist_agg), adj < 0.05)
+    toppw <- rownames(filter(pwlist_agg, adjP < 0.05))
 
-    toppw_pval <- list()
 
-    for (p in toppw) {
-      tmplist <- list()
-
-      for (i in 1:length(pwlist)) {
-        ind <- which(pathways$pw[[i]] == p)
-
-        if (length(ind) > 0) {
-          tmplist[[i]] <- pathways$pval[[i]][ind]
-        } else {
-          tmplist[[i]] <- NULL
-        }
-
-      }
-      tmpvec <- unlist(tmplist)
-      toppw_pval[[p]] <- mean(tmpvec)
-    }
+    # # Dead Code!!!
+    #
+    # toppw_pval <- list()
+    # for (p in toppw) {
+    #   tmplist <- list()
+    #
+    #   for (i in 1:length(pwlist)) {
+    #     ind <- which(pathways$pw[[i]] == p)
+    #
+    #     if (length(ind) > 0) {
+    #       tmplist[[i]] <- pathways$pval[[i]][ind]
+    #     } else {
+    #       tmplist[[i]] <- NULL
+    #     }
+    #
+    #   }
+    #   tmpvec <- unlist(tmplist)
+    #   toppw_pval[[p]] <- mean(tmpvec)
+    # }
 
     # Final gene set enrichment analysis on the selected pathway
     fit <-
@@ -348,9 +351,10 @@ fs_transcriptomics <-
     # Sorting the ranklist
     ranklist <- sort(ranklist)
 
+    # return(names(ranklist))
+
     # Geneset reactome
     # Muteing warning messages for now
-
 
     suppressMessages({
       suppressWarnings({
@@ -369,6 +373,8 @@ fs_transcriptomics <-
           minSize = 15,
           maxSize = 200
         ) %>% arrange(pval) #%>% filter(padj < 0.1)
+
+        # return(fgseaRes)
 
         # Adding values to leadingEdge
         fgseaRes <-

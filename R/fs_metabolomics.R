@@ -57,7 +57,7 @@ fs_metabolomics <-
     # normal length of iteration
     # i in 1:length(train_metabolomics_IDs)
 
-    for (i in 1:10) {
+    for (i in 1:5) {
       cat("Iter ", i, "\n")
 
       # Selecting the data_IDs with one set of the data_partitioning
@@ -138,6 +138,8 @@ fs_metabolomics <-
         anno_fil$Mnumber[match(edge_tmp, anno_fil$ChEBI)]
       gsea$pathway[[i]] <- fgsea_tmp
 
+      # return(fgsea_tmp)
+
       cat("...Elastic net\n")
 
       # Metabolomic IDs used for training
@@ -200,66 +202,63 @@ fs_metabolomics <-
 
     saveRDS(gsea, "meta_gsea_list.rds")
 
-    # Needs to be added or removed, after the next meeting
+    # Select the top significant pathways
+    keep <- vector("logical", length = length(gsea$auc))
+    for (i in 1:length(keep)) {
+      if (is.null(gsea$auc[[i]])) {
+        next
+      } else if (gsea$auc[[i]] <= 0.5) {
+        next
+      } else{
+        keep[i] <- TRUE
+      }
+    }
 
-    # # Select the top significant pathways
-    # keep <- vector("logical", length = length(gsea$auc))
-    # for (i in 1:length(keep)) {
-    #   if (is.null(gsea$auc[[i]])) {
-    #     next
-    #   } else if (gsea$auc[[i]] <= 0.5) {
-    #     next
-    #   } else{
-    #     keep[i] <- TRUE
-    #   }
-    # }
-    #
-    # # return(keep)
-    #
-    #
-    # # Pathways
-    # pwlist <- gsea$pathway[keep]
-    #
-    # # return(pwlist)
-    #
-    # pathways <- list(pw = list(),
-    #                  pval = list(),
-    #                  NES = list())
-    #
-    # for (i in 1:length(pwlist)) {
-    #   if (is.null(pwlist[[i]])) {
-    #     next
-    #   }
-    #   pathways$pw[[i]] = pwlist[[i]]$pathway
-    #   pathways$pval[[i]] = pwlist[[i]]$pval
-    #   pathways$NES[[i]] = pwlist[[i]]$NES
-    # }
-    #
-    # # return(pathways)
-    #
-    # pwlist_agg <- aggregateRanks(pathways$pw)
-    # pwlist_agg$adjP <- pwlist_agg$Score * length(pathways$pw)
-    # pwlist_agg$adjP <- p.adjust(pwlist_agg$adjP, method = "fdr")
-    # toppw <- rownames(filter(pwlist_agg, adjP < 0.05))
-    #
-    # Dead code!!!
-    # toppw_pval <- list()
-    # for (p in toppw) {
-    #   tmplist = list()
-    #   for (i in 1:length(pwlist)) {
-    #     ind = which(pathways$pw[[i]] == p)
-    #     if (length(ind) > 0) {
-    #       tmplist[[i]] = pathways$pval[[i]][ind]
-    #     } else {
-    #       tmplist[[i]] = NULL
-    #     }
-    #   }
-    #   tmpvec = unlist(tmplist)
-    #   toppw_pval[[p]] = mean(tmpvec)
-    # }
+    # Pathways
+    pwlist <- gsea$pathway[keep]
+    pathways <- list(pw = list(),
+                     pval = list(),
+                     NES = list())
+
+    for (i in 1:length(pwlist)) {
+      if (is.null(pwlist[[i]])) {
+        next
+      }
+      pathways$pw[[i]] = pwlist[[i]]$pathway
+      pathways$pval[[i]] = pwlist[[i]]$pval
+      pathways$NES[[i]] = pwlist[[i]]$NES
+    }
+
+    pwlist_agg <- aggregateRanks(pathways$pw)
+    pwlist_agg$adjP <- pwlist_agg$Score*length(pathways$pw)
+    pwlist_agg$adjP <- p.adjust(pwlist_agg$adjP, method = "fdr")
+
+    return(pwlist_agg)
+
+    toppw <- rownames(filter(pwlist_agg), adjP < 0.05)
+
+    # return(pwlist_agg)
+
+    # Dead code!!!?
+
+    toppw_pval <- list()
+    for (p in toppw) {
+      tmplist = list()
+      for (i in 1:length(pwlist)) {
+        ind = which(pathways$pw[[i]] == p)
+        if (length(ind) > 0) {
+          tmplist[[i]] = pathways$pval[[i]][ind]
+        } else {
+          tmplist[[i]] = NULL
+        }
+      }
+      tmpvec = unlist(tmplist)
+      toppw_pval[[p]] = mean(tmpvec)
+    }
+
+    return(toppw_pval)
 
     # Final gene set enrichment analysis on the selected pathways
-
     # Fit
     fit <-
       lmFit(metabolomics_data[,!is.na(match(colnames(metabolomics_data),
@@ -284,13 +283,12 @@ fs_metabolomics <-
     names(ranklist) <- topde$ChEBI
     ranklist <- sort(ranklist)
 
-
     suppressMessages({
       suppressWarnings({
-        # # Pathways
-        # geneset_reactome <- reactomePathways(names(ranklist))
-        # geneset_reactome <-
-        #   geneset_reactome[intersect(names(geneset_reactome), toppw)]
+        # Pathways
+        geneset_reactome <- reactomePathways(names(ranklist))
+        geneset_reactome <-
+          geneset_reactome[intersect(names(geneset_reactome), toppw)]
 
 
         # Seed
@@ -300,7 +298,7 @@ fs_metabolomics <-
         # Change pathway, either pathway_list or geneset_reactome
         # fgsea
         fgseaRes <- fgsea(
-          pathways = pathway_list,
+          pathways = geneset_reactome,
           stats    = ranklist,
           minSize  = 5,
           maxSize  = 200
