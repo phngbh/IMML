@@ -63,7 +63,7 @@ fs_transcriptomics <-
     # i in 1:length(train_transcriptomics_IDs)
 
 
-    for (i in 1:length(train_transcriptomics_IDs)) {
+    for (i in 1:2) {
       cat("Iter ", i, "\n")
       # Selecting the data_IDs with one set of the data_partitioning
       clin_IDs <- unlist(train_transcriptomics_IDs[[i]])
@@ -192,6 +192,8 @@ fs_transcriptomics <-
       probelist_tmp <- gsea$ilmn[[i]]
       test_ID <-
         colnames(transcriptomics_data[,!(colnames(transcriptomics_data) %in% resamples)])
+      # test_ID <- unlist(test_IDs[[i]])
+
       x_train <-
         transcriptomics_data[probelist_tmp, resamples] %>% t()
       y_train <- info[resamples, "inc3"]
@@ -283,27 +285,6 @@ fs_transcriptomics <-
     pwlist_agg$adjP <- p.adjust(pwlist_agg$adjP, method = "fdr")
 
     toppw <- rownames(filter(pwlist_agg, adjP < 0.05))
-
-
-    # # Dead Code!!!
-    #
-    # toppw_pval <- list()
-    # for (p in toppw) {
-    #   tmplist <- list()
-    #
-    #   for (i in 1:length(pwlist)) {
-    #     ind <- which(pathways$pw[[i]] == p)
-    #
-    #     if (length(ind) > 0) {
-    #       tmplist[[i]] <- pathways$pval[[i]][ind]
-    #     } else {
-    #       tmplist[[i]] <- NULL
-    #     }
-    #
-    #   }
-    #   tmpvec <- unlist(tmplist)
-    #   toppw_pval[[p]] <- mean(tmpvec)
-    # }
 
     # Final gene set enrichment analysis on the selected pathway
     fit <-

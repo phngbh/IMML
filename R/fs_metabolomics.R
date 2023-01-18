@@ -57,7 +57,7 @@ fs_metabolomics <-
     # normal length of iteration
     # i in 1:length(train_metabolomics_IDs)
 
-    for (i in 1:5) {
+    for (i in 1:100) {
       cat("Iter ", i, "\n")
 
       # Selecting the data_IDs with one set of the data_partitioning
@@ -233,30 +233,11 @@ fs_metabolomics <-
     pwlist_agg$adjP <- pwlist_agg$Score*length(pathways$pw)
     pwlist_agg$adjP <- p.adjust(pwlist_agg$adjP, method = "fdr")
 
-    return(pwlist_agg)
-
-    toppw <- rownames(filter(pwlist_agg), adjP < 0.05)
-
     # return(pwlist_agg)
 
-    # Dead code!!!?
+    toppw <- rownames(filter(pwlist_agg, adjP < 0.05))
 
-    toppw_pval <- list()
-    for (p in toppw) {
-      tmplist = list()
-      for (i in 1:length(pwlist)) {
-        ind = which(pathways$pw[[i]] == p)
-        if (length(ind) > 0) {
-          tmplist[[i]] = pathways$pval[[i]][ind]
-        } else {
-          tmplist[[i]] = NULL
-        }
-      }
-      tmpvec = unlist(tmplist)
-      toppw_pval[[p]] = mean(tmpvec)
-    }
-
-    return(toppw_pval)
+    # return(toppw)
 
     # Final gene set enrichment analysis on the selected pathways
     # Fit
@@ -276,6 +257,8 @@ fs_metabolomics <-
       topTable(tmp, sort.by = "P", n = Inf) %>% mutate(ID = rownames(.)) %>%
       mutate(Name = anno_fil$Biochemical_F4[match(.$ID, anno_fil$Mnumber)],
              ChEBI = anno_fil$ChEBI[match(.$ID, anno_fil$Mnumber)])
+
+    # return(topde)
 
     # ranklist
     ranklist <- topde$t
@@ -300,11 +283,11 @@ fs_metabolomics <-
         fgseaRes <- fgsea(
           pathways = geneset_reactome,
           stats    = ranklist,
-          minSize  = 5,
+          minSize  = 1,
           maxSize  = 200
         ) %>% arrange(pval) #%>% filter(padj < 0.3)
 
-        return(fgseaRes)
+        # return(fgseaRes)
 
         fgseaRes <-
           fgseaRes %>% mutate(

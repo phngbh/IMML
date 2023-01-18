@@ -52,7 +52,7 @@ load <- function(clinical = FALSE,
       )
 
     # Transpose matrix, so its equa to the other data tables
-    .GlobalEnv$clinical_processed <- t(clinical_processed)
+    .GlobalEnv$clinical_processed <- clinical_processed
   }
 
   # Genomics

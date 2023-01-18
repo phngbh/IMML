@@ -70,7 +70,7 @@ data_partitioning <-
 
       # Create a data partitioning with "caret"
       data_part <-
-        createDataPartition(unlist(frame), times = amount, p = partitioning)
+        caret::createDataPartition(unlist(frame), times = amount, p = partitioning)
 
       # Go through each of the 100 partitions
       for (j in 1:length(data_part)) {
