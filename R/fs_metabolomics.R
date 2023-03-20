@@ -30,7 +30,7 @@ fs_metabolomics <-
     # Data frame of phenotypes with all used IDs and their inc3 value
     samples <- unlist(train_metabolomics_IDs) %>% unique()
     meta_IDs <-
-      data_IDs[match(samples, data_IDs$Clinical), ] %>% dplyr::select("Metabolomics") %>% unlist()
+      data_IDs[match(samples, data_IDs$Clinical),] %>% dplyr::select("Metabolomics") %>% unlist()
 
     info <-
       phenotype_IDs[as.character(samples), "inc3", drop = FALSE]
@@ -39,7 +39,7 @@ fs_metabolomics <-
     # Creating a model matrix
     info <- info %>% transmute(inc3 = as.character(inc3))
 
-    modmatrix <- model.matrix(~ 0 + ., data = info)
+    modmatrix <- model.matrix( ~ 0 + ., data = info)
 
     # Creating a list for the gsea
     gsea = list(
@@ -69,7 +69,7 @@ fs_metabolomics <-
 
       # Getting the temporary data needed for calculations
       tmp_data <-
-        metabolomics_data[, !is.na(match(colnames(metabolomics_data), tmp_metabolomics_IDs))]
+        metabolomics_data[,!is.na(match(colnames(metabolomics_data), tmp_metabolomics_IDs))]
 
       cat("...DE analysis\n")
 
@@ -150,7 +150,7 @@ fs_metabolomics <-
       # Training/Testing
       probelist_tmp <- gsea$probe[[i]]
       test_ID <-
-        colnames(metabolomics_data[, !(colnames(metabolomics_data) %in% resamples)])
+        colnames(metabolomics_data[,!(colnames(metabolomics_data) %in% resamples)])
       x_train <- metabolomics_data[probelist_tmp, resamples] %>% t()
       y_train <- info[resamples, "inc3"]
       y_train <-
@@ -230,20 +230,27 @@ fs_metabolomics <-
     }
 
     pwlist_agg <- aggregateRanks(pathways$pw)
-    pwlist_agg$adjP <- pwlist_agg$Score*length(pathways$pw)
+
+    # return(length(pathways$pw))
+
+    pwlist_agg$adjP <- pwlist_agg$Score * length(pathways$pw)
+
+    # return(pwlist_agg)
+
     pwlist_agg$adjP <- p.adjust(pwlist_agg$adjP, method = "fdr")
 
     # return(pwlist_agg)
 
     toppw <- rownames(filter(pwlist_agg, adjP < 0.05))
 
+    # is empty!!!
     # return(toppw)
 
     # Final gene set enrichment analysis on the selected pathways
     # Fit
     fit <-
-      lmFit(metabolomics_data[,!is.na(match(colnames(metabolomics_data),
-                                            rownames(modmatrix))), drop = F],
+      lmFit(metabolomics_data[, !is.na(match(colnames(metabolomics_data),
+                                             rownames(modmatrix))), drop = F],
             modmatrix[!is.na(match(rownames(modmatrix), colnames(metabolomics_data))), , drop = F])
 
     # Contrast
@@ -311,9 +318,7 @@ fs_metabolomics <-
       })
     })
 
-
     # End of function
     return("Feature selection metabolomics done!")
-
 
   }

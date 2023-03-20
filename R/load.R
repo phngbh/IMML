@@ -39,9 +39,9 @@ load <- function(clinical = FALSE,
 
   # data_partitioning tables
   .GlobalEnv$training_IDs <-
-    data_partitioning(phenotypes, sample_IDs)
+    data_partitioning(phenotypes, sample_IDs, seed = 124)
   .GlobalEnv$testing_IDs <-
-    data_partitioning(phenotypes, sample_IDs, type = "testing")
+    data_partitioning(phenotypes, sample_IDs, type = "testing", seed = 124)
 
 
   # Clinical
@@ -51,7 +51,7 @@ load <- function(clinical = FALSE,
         "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/data/Clinical_data/clinical_processed.rds"
       )
 
-    # Transpose matrix, so its equa to the other data tables
+    # Transpose matrix, so its equal to the other data tables
     .GlobalEnv$clinical_processed <- clinical_processed
   }
 

@@ -22,23 +22,39 @@ fs_clinical <-
 
     #
 
-    # return(clinical_data[,as.numeric("2")])
+    # # return(clinical_data[,as.numeric("2")])
+    #
+    # test <-
+    #   as.character(unlist(append(
+    #     train_clinical_IDs[1], test_clinical_IDs[1]
+    #   )))
+    #
+    # # return(sort(test))
+    #
+    # mnsi <-
+    #   dplyr::filter(phenotype_IDs, rownames(phenotype_IDs) %in% test)
+    # inc <- mnsi$inc3
+    # names(inc) <- rownames(mnsi)
+    # inc <-
+    #   ifelse(inc == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
+    #
+    # # return(length(inc))
 
-    test <-
-      as.character(unlist(append(
-        train_clinical_IDs[1], test_clinical_IDs[1]
-      )))
+    mnsi <- filter(phenotype_IDs,!is.na(inc3))
 
-    # return(sort(test))
-
-    mnsi <-
-      dplyr::filter(phenotype_IDs, rownames(phenotype_IDs) %in% test)
     inc <- mnsi$inc3
+
     names(inc) <- rownames(mnsi)
+
     inc <-
       ifelse(inc == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
 
-    # return(length(inc))
+    # return(inc)
+
+
+
+
+
 
     #Do elastic net
     my_control <- trainControl(
@@ -70,12 +86,12 @@ fs_clinical <-
 
       # Workaround at the moment, because of missing data in clinical_processed
       x_train <-
-        clinical_data[as.character(train_id),] %>% drop_na()
-      y_train <- inc[rownames(x_train)]
-      x_test <- clinical_data[as.character(test_id),] #%>% drop_na()
+        clinical_data[as.character(train_id), ] %>% drop_na()
+      y_train <- inc[as.character(train_id)]
+      x_test <- clinical_data[as.character(test_id), ] #%>% drop_na()
       y_test <- inc[rownames(x_test)]
 
-      return(y_test)
+      return(rownames(x_train))
 
       weights <-
         ifelse(y_train == "One", table(y_train)[[2]] / table(y_train)[[1]], 1)
