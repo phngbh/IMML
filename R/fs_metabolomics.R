@@ -30,7 +30,7 @@ fs_metabolomics <-
     # Data frame of phenotypes with all used IDs and their inc3 value
     samples <- unlist(train_metabolomics_IDs) %>% unique()
     meta_IDs <-
-      data_IDs[match(samples, data_IDs$Clinical),] %>% dplyr::select("Metabolomics") %>% unlist()
+      data_IDs[match(samples, data_IDs$Clinical), ] %>% dplyr::select("Metabolomics") %>% unlist()
 
     info <-
       phenotype_IDs[as.character(samples), "inc3", drop = FALSE]
@@ -39,7 +39,7 @@ fs_metabolomics <-
     # Creating a model matrix
     info <- info %>% transmute(inc3 = as.character(inc3))
 
-    modmatrix <- model.matrix( ~ 0 + ., data = info)
+    modmatrix <- model.matrix(~ 0 + ., data = info)
 
     # Creating a list for the gsea
     gsea = list(
@@ -57,6 +57,24 @@ fs_metabolomics <-
     # normal length of iteration
     # i in 1:length(train_metabolomics_IDs)
 
+    # Adding parallel computation
+    # Removed for now
+    # cl <- makeCluster(2)
+    # registerDoSNOW(cl)
+    #
+    # foreach (i = 1:100, .packages = c("org.Hs.eg.db",
+    #                                   "dplyr",
+    #                                   "tidyr",
+    #                                   "caret",
+    #                                   "BiocManager",
+    #                                   "limma",
+    #                                   "ChAMP",
+    #                                   "fgsea",
+    #                                   "glmnet",
+    #                                   "themis",
+    #                                   "pROC",
+    #                                   "RobustRankAggreg",
+    #                                   "knitr")) %dopar%
     for (i in 1:100) {
       cat("Iter ", i, "\n")
 
@@ -69,7 +87,7 @@ fs_metabolomics <-
 
       # Getting the temporary data needed for calculations
       tmp_data <-
-        metabolomics_data[,!is.na(match(colnames(metabolomics_data), tmp_metabolomics_IDs))]
+        metabolomics_data[, !is.na(match(colnames(metabolomics_data), tmp_metabolomics_IDs))]
 
       cat("...DE analysis\n")
 
@@ -150,7 +168,7 @@ fs_metabolomics <-
       # Training/Testing
       probelist_tmp <- gsea$probe[[i]]
       test_ID <-
-        colnames(metabolomics_data[,!(colnames(metabolomics_data) %in% resamples)])
+        colnames(metabolomics_data[, !(colnames(metabolomics_data) %in% resamples)])
       x_train <- metabolomics_data[probelist_tmp, resamples] %>% t()
       y_train <- info[resamples, "inc3"]
       y_train <-
@@ -200,6 +218,9 @@ fs_metabolomics <-
 
     }
 
+    # Stop the cluster
+    # stopCluster(cl)
+
     saveRDS(gsea, "meta_gsea_list.rds")
 
     # Select the top significant pathways
@@ -214,8 +235,13 @@ fs_metabolomics <-
       }
     }
 
+    # return(keep)
+
     # Pathways
     pwlist <- gsea$pathway[keep]
+
+    # return(pwlist)
+
     pathways <- list(pw = list(),
                      pval = list(),
                      NES = list())
@@ -231,11 +257,12 @@ fs_metabolomics <-
 
     pwlist_agg <- aggregateRanks(pathways$pw)
 
-    # return(length(pathways$pw))
+    # return(pwlist_agg)
 
     pwlist_agg$adjP <- pwlist_agg$Score * length(pathways$pw)
 
     # return(pwlist_agg)
+    # return(length(pathways$pw))
 
     pwlist_agg$adjP <- p.adjust(pwlist_agg$adjP, method = "fdr")
 
@@ -243,14 +270,14 @@ fs_metabolomics <-
 
     toppw <- rownames(filter(pwlist_agg, adjP < 0.05))
 
-    # is empty!!!
+    # is empty because of wrong p-values
     # return(toppw)
 
     # Final gene set enrichment analysis on the selected pathways
     # Fit
     fit <-
-      lmFit(metabolomics_data[, !is.na(match(colnames(metabolomics_data),
-                                             rownames(modmatrix))), drop = F],
+      lmFit(metabolomics_data[,!is.na(match(colnames(metabolomics_data),
+                                            rownames(modmatrix))), drop = F],
             modmatrix[!is.na(match(rownames(modmatrix), colnames(metabolomics_data))), , drop = F])
 
     # Contrast
@@ -286,6 +313,8 @@ fs_metabolomics <-
 
 
         # Change pathway, either pathway_list or geneset_reactome
+        # Problem with minSize, only returns something when size is 1
+
         # fgsea
         fgseaRes <- fgsea(
           pathways = geneset_reactome,

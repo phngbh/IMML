@@ -46,15 +46,12 @@ fs_clinical <-
 
     names(inc) <- rownames(mnsi)
 
+    inc <- na.omit(inc)
+
     inc <-
       ifelse(inc == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
 
     # return(inc)
-
-
-
-
-
 
     #Do elastic net
     my_control <- trainControl(
@@ -75,42 +72,30 @@ fs_clinical <-
 
 
     # length(resamples)
-    for (i in 1:20) {
+    for (i in 1:100) {
       cat("Fold", i, "\n")
 
       train_id <- unlist(train_clinical_IDs[[i]])
       test_id <- unlist(test_clinical_IDs[[i]])
       # test_id <- setdiff(rownames(clinical_data), train_id)
 
-      # return(test_id)
+      # return(train_id)
 
-      # Workaround at the moment, because of missing data in clinical_processed
+      # Using the rownames of the selected IDs for x also for y
+      # NA values are no longer used this way
       x_train <-
         clinical_data[as.character(train_id), ] %>% drop_na()
-      y_train <- inc[as.character(train_id)]
-      x_test <- clinical_data[as.character(test_id), ] #%>% drop_na()
-      y_test <- inc[rownames(x_test)]
 
-      return(rownames(x_train))
+      y_train <- inc[as.character(rownames(x_train))]
+
+      x_test <- clinical_data[as.character(test_id), ] %>% drop_na()
+
+      y_test <- inc[rownames(x_test)]
 
       weights <-
         ifelse(y_train == "One", table(y_train)[[2]] / table(y_train)[[1]], 1)
 
-      # return(weights)
-
-      # return(any(rownames(x_train) != names(y_train)))
-      # return(rownames(x_train))
-      # return(names(y_train))
-      # return(colnames(x_test))
-
-      # Maybe not needed, because the selected IDs are checked through by the
-      # selection of the training and testing IDs
-      if (any(rownames(x_train) != names(y_train)) |
-          any(rownames(x_test) != names(y_test))) {
-        message("Samples in train and test sets do not match!")
-        next
-      }
-
+      # Building the fit
       set.seed(993)
       fit <- caret::train(
         x = x_train,
@@ -124,7 +109,7 @@ fs_clinical <-
         importance = TRUE
       )
 
-      # return((fit))
+      # Building the prediction
 
       pred <-
         predict(fit, x_test, s = "lambda.min", type = "prob")$One
@@ -141,11 +126,9 @@ fs_clinical <-
       names(vari) <- rownames(var_imp)
       vari <- vari[order(vari, decreasing = T)]
 
-      # return(var_fil)
-      #var = var[var != 0]
       var[[i]] <- vari
 
-      # return(vari)
+      # return(var)
 
     }
 
@@ -166,12 +149,12 @@ fs_clinical <-
     # return(var_rra)
     var_sel <- var_rra %>% dplyr::filter(adjP < 0.05)
 
-    # return(rownames(var_sel))
+    var_sel <- as.numeric(unname(unlist(select(var_sel, "Name"))))
 
-    return(clinical_data[, as.numeric(rownames(var_sel)) %in% 1:ncol(clinical_data)])
+    # return(features_sel)
 
-    saveRDS(clinical_data[, as.numeric(rownames(var_sel))], "clinical_selected.rds")
+    saveRDS(dplyr::select(clinical_data, all_of(var_sel)), "clinical_selected.rds")
 
 
-    return("done")
+    return("Elasticnet clinical done!")
   }

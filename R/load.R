@@ -27,11 +27,11 @@ load <- function(clinical = FALSE,
   # General data used for everything
   sample_IDs <-
     readRDS(
-      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/supporting_files/sample_IDs.rds"
+      "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/supporting_files/sample_IDs.rds"
     )
   phenotypes <-
     readRDS(
-      "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/supporting_files/phenotypes.rds"
+      "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/supporting_files/phenotypes.rds"
     )
 
   .GlobalEnv$sample_IDs <- sample_IDs
@@ -48,7 +48,7 @@ load <- function(clinical = FALSE,
   if (clinical) {
     clinical_processed <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/data/Clinical_data/clinical_processed.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/data/Clinical_data/clinical_processed.rds"
       )
 
     # Transpose matrix, so its equal to the other data tables
@@ -62,19 +62,19 @@ load <- function(clinical = FALSE,
   if (metabolomics) {
     meta_lowest_level_pathways <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_metabolomics/meta_lowest_level_pathways.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_metabolomics/meta_lowest_level_pathways.rds"
       )
     meta_anno_fil <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_metabolomics/meta_anno_fil.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_metabolomics/meta_anno_fil.rds"
       )
     meta_pathway_list <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_metabolomics/meta_pathway_list.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_metabolomics/meta_pathway_list.rds"
       )
     metabolomics_processed <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/data/Metabolomics/metabolomics_processed.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/data/Metabolomics/metabolomics_processed.rds"
       )
 
     .GlobalEnv$meta_lowest_level_pathways <-
@@ -88,7 +88,7 @@ load <- function(clinical = FALSE,
   if (methylomics) {
     meth_lowest_level_pathways <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_methylomics/meth_lowest_level_pathways.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_methylomics/meth_lowest_level_pathways.rds"
       )
 
     # methylomics_processed missing!
@@ -101,11 +101,11 @@ load <- function(clinical = FALSE,
   if (protemoics) {
     prot_lowest_level_pathways <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_proteomics/prot_lowest_level_pathways.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_proteomics/prot_lowest_level_pathways.rds"
       )
     prot_somamer_info_edited <-
       read.csv(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_proteomics/prot_somamer_info_edited.csv"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_proteomics/prot_somamer_info_edited.csv"
       )
 
     # proteomics_processed missing!
@@ -119,19 +119,19 @@ load <- function(clinical = FALSE,
   if (transcriptomics) {
     trans_lowest_level_pathways <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_transcriptomics/trans_lowest_level_pathways.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_transcriptomics/trans_lowest_level_pathways.rds"
       )
     trans_annotation_HumanHT_v3_final <-
       read.csv(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_transcriptomics/trans_annotation_HumanHT-12v3_final.csv"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_transcriptomics/trans_annotation_HumanHT-12v3_final.csv"
       )
     trans_gene_information <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/download/fs_transcriptomics/trans_gene_IDs.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_transcriptomics/trans_gene_IDs.rds"
       )
     transcriptomics_processed <-
       readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Daten/IMLdata/data/Transcriptomics/transcriptomics_processed.rds"
+        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/data/Transcriptomics/transcriptomics_processed.rds"
       )
 
     .GlobalEnv$trans_lowest_level_pathways <-
