@@ -14,31 +14,12 @@ fs_clinical <-
            data_IDs,
            phenotype_IDs,
            clinical_data) {
+    #
     # Getting IDs
     train_clinical_IDs <-
       train_IDs$`Feature Selection IDs`$Clinical
     test_clinical_IDs <-
       test_IDs$`Feature Selection IDs`$Clinical
-
-    #
-
-    # # return(clinical_data[,as.numeric("2")])
-    #
-    # test <-
-    #   as.character(unlist(append(
-    #     train_clinical_IDs[1], test_clinical_IDs[1]
-    #   )))
-    #
-    # # return(sort(test))
-    #
-    # mnsi <-
-    #   dplyr::filter(phenotype_IDs, rownames(phenotype_IDs) %in% test)
-    # inc <- mnsi$inc3
-    # names(inc) <- rownames(mnsi)
-    # inc <-
-    #   ifelse(inc == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
-    #
-    # # return(length(inc))
 
     mnsi <- filter(phenotype_IDs,!is.na(inc3))
 
@@ -51,9 +32,8 @@ fs_clinical <-
     inc <-
       ifelse(inc == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
 
-    # return(inc)
-
-    #Do elastic net
+    # Do elastic net
+    # Build control
     my_control <- trainControl(
       method = "repeatedcv",
       number = 5,
@@ -153,7 +133,8 @@ fs_clinical <-
 
     # return(features_sel)
 
-    saveRDS(dplyr::select(clinical_data, all_of(var_sel)), "clinical_selected.rds")
+    saveRDS(dplyr::select(clinical_data, all_of(var_sel)),
+            "clinical_selected.rds")
 
 
     return("Elasticnet clinical done!")

@@ -113,7 +113,7 @@ fs_metabolomics <-
 
       tmp <- eBayes(tmp)
 
-      #topTable function
+      # topTable function
       topde <-
         topTable(tmp, sort.by = "P", n = Inf) %>% mutate(ID = rownames(.)) %>%
         mutate(Name = anno_fil$Biochemical_F4[match(.$ID, anno_fil$Mnumber)],
