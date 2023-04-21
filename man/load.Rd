@@ -4,7 +4,13 @@
 \alias{load}
 \title{load()}
 \usage{
-load()
+load(
+  clinical = FALSE,
+  metabolomics = FALSE,
+  methylomics = FALSE,
+  protemoics = FALSE,
+  transcriptomics = FALSE
+)
 }
 \description{
 Loading all necessary data, to build the package

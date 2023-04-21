@@ -37,33 +37,52 @@ fs_proteomics <- function(train_IDs,
   rownames(info) <- prot_IDs
 
 
+
+
   # Creating a model matrix
   info <- info %>% transmute(inc3 = as.character(inc3))
 
   modmatrix <- model.matrix(~ 0 + ., data = info)
 
+
   # Select data, fit, contrast
   data <- proteomics_data[, rownames(modmatrix)]
 
-  fit <- lmFit(dat, modmatrix)
+  fit <- lmFit(data, modmatrix)
 
   contrast <-
     makeContrasts(inc31 - inc30, levels = colnames(coef(fit)))
+
 
   # Temporary data
   tmp <- contrasts.fit(fit, contrast)
   tmp <- eBayes(tmp)
 
+
   # topTable function
   topde <-
-    topTable(tmp, sort.by = "P", n = Inf) %>%
-    mutate(Name = somamaer_info_edited$EntrezGeneSymbol
-           [match(.$Gene, rownames(somamaer_info_edited))],
-           EntrezID = somamaer_info_edited$EntrezGeneID
-           [match(.$Gene, rownames(somamaer_info_edited))])
+    topTable(tmp, sort.by = "P", n = Inf)
 
-  topde.tmp <- dplyr::select(topde, EntrezID, P.Value) %>% na.omit()
-  tmp <- tapply(topde.tmp$P.Value, topde.tmp$EntrezID, min)
+
+  # return(topde)
+
+  topde <-
+    topde %>%
+    dplyr::mutate(Gene = rownames(topde)) %>%
+    dplyr::mutate(Name = somamaer_info_edited$EntrezGeneSymbol
+                  [match(.$Gene, somamaer_info_edited$SeqId)],
+                  EntrezID = somamaer_info_edited$EntrezGeneID
+                  [match(.$Gene, somamaer_info_edited$SeqId)])
+
+
+
+  # return(rownames(somamaer_info_edited))
+  # return(somamaer_info_edited$EntrezGeneSymbol)
+  # return(topde)
+  # Problem in topde (solved?)
+
+  topde_tmp <- dplyr::select(topde, EntrezID, P.Value) %>% na.omit()
+  tmp <- tapply(topde_tmp$P.Value, topde_tmp$EntrezID, min)
 
   # Build lists
   ranklist <- vector(mode = "numeric", length = length(tmp))
@@ -71,28 +90,76 @@ fs_proteomics <- function(train_IDs,
 
   ilmnlist <- vector(mode = "character", length = length(tmp))
 
-  for (i in length(tmp)) {
-    # Get values
-    t <-
-      dplyr::filter(topde, EntrezID == names(tmp)[i] &
-                      P.Value == tmp[i]$t)
-    il <-
-      dplyr::filter(topde, EntrezID == names(tmp)[i] &
-                      P.Value == tmp[i]$Gene)
 
-    # Add to list
-    ranklist[i] <- t
-    ilmnlist[i] <- il
-  }
+  # return(topde)
+  # return(length(tmp))
+  # return(length(topde_tmp))
+  # return(filter(topde_tmp, EntrezID == 1000))
+  # return(min(topde_tmp$P.Value))
+  # return((names(tmp)))
+  # return(topde$EntrezID)
+  # return(na.omit(topde$EntrezID))
+  # return(filter(topde, EntrezID == names(tmp)))
+  # return(topde_tmp)
+  # return(names(tmp))
+
+  # Alternative Code
+  tmp2 <-
+    dplyr::filter(topde, EntrezID %in% names(tmp) &
+                    P.Value %in% tmp)
+
+  # return(tmp2)
+
+  t_tmp2 <- tmp2 %>% dplyr::select(EntrezID, t)
+  ranklist[as.character(t_tmp2$EntrezID)] <- t_tmp2$t
+
+
+  il <-
+    dplyr::filter(topde, EntrezID %in% names(tmp) &
+                    P.Value %in% tmp)$Gene
+  ilmnlist <- il
+
+
+  # return(ranklist)
+  # return(il)
+  # return(sort(ilmnlist))
+
+  # 1:length(tmp)
+  # for (i in 1:length(tmp)) {
+  #   # Select values
+  #   cat("Iter ", i, "\n")
+  #   t <-
+  #     dplyr::filter(topde, EntrezID == names(tmp)[i] &
+  #                     P.Value == tmp[i])$t
+  #   # return(t)
+  #
+  #   il <-
+  #     dplyr::filter(topde, EntrezID == names(tmp)[i] &
+  #                     P.Value == tmp[i])$Gene
+  #
+  #   # Add to list
+  #   ranklist[i] <- t
+  #   ilmnlist[i] <- il
+  # }
+
+  # return(sort(ilmnlist))
+  # return((ranklist))
 
   # Build dataframe
   genelist = data.frame(Entrez = names(ranklist),
                         Probe = ilmnlist,
                         t = ranklist)
+
+  # return(genelist)
   ranklist = sort(ranklist)
   geneset_reactome = reactomePathways(names(ranklist))
-  geneset_reactome = geneset_reactome[intersect(names(geneset_reactome), toppw)]
+
+  # Problem with toppw! (not existing)
+  # geneset_reactome = geneset_reactome[intersect(names(geneset_reactome), toppw)]
+
   set.seed(993)
+
+  # return(geneset_reactome)
 
   # GSEA
   fgseaRes <- fgsea(
@@ -100,13 +167,22 @@ fs_proteomics <- function(train_IDs,
     stats    = ranklist,
     minSize  = 5,
     maxSize  = 200
-  ) %>% arrange(pval) %>% filter(padj < 0.1)
-  fgseaRes[, leadingEdge := mapIdsList(
-    x = org.Hs.eg.db,
-    keys = leadingEdge,
-    keytype = "ENTREZID",
-    column = "SYMBOL"
-  )]
+  ) %>% arrange(pval) #%>% filter(padj < 0.1)
+
+  return(columns(fgseaRes))
+
+  # Error in mutating the leadingEdge: Invalid keytype Symbol
+  fgseaRes <-
+    fgseaRes %>% mutate(
+      leadingEdge = mapIdsList(
+        x = org.Hs.eg.db,
+        keys = leadingEdge,
+        keytype = "ENTREZID",
+        column = "SYMBOL"
+      )
+    )
+
+
 
   # Save results
   saveRDS(fgseaRes, "prot_gsea_final.rds")

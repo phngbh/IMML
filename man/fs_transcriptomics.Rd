@@ -2,7 +2,7 @@
 % Please edit documentation in R/fs_transcriptomics.R
 \name{fs_transcriptomics}
 \alias{fs_transcriptomics}
-\title{Feature Selection for transcriptomics}
+\title{Feature Selection for Transcriptomics}
 \usage{
 fs_transcriptomics(
   train_IDs,
@@ -10,12 +10,14 @@ fs_transcriptomics(
   data_IDs,
   phenotype_IDs,
   transcriptomics_data,
-  gene_anotation = NULL
+  gene_anotation,
+  low_lev_path,
+  seed = 123
 )
 }
 \arguments{
-\item{transcriptomics_data}{}
+\item{seed}{}
 }
 \description{
-Feature Selection for transcriptomics
+Feature Selection for Transcriptomics
 }

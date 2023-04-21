@@ -107,9 +107,11 @@ load <- function(clinical = FALSE,
       read.csv(
         "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_proteomics/prot_somamer_info_edited.csv"
       )
+    proteomics_processed <-
+      readRDS("C:/Users/ulric/Desktop/Arbeit/Data/IMLdata/data/Proteomics/proteomics_processed.rds")
 
-    # proteomics_processed missing!
-
+    .GlobalEnv$proteomics_processed <-
+      proteomics_processed
     .GlobalEnv$prot_lowest_level_pathways <-
       prot_lowest_level_pathways
     .GlobalEnv$prot_somamer_info_edited <- prot_somamer_info_edited
