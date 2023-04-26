@@ -17,6 +17,7 @@ Imports:
     reshape2
 Depends: 
     org.Hs.eg.db,
+    AnnotationDbi,
     dplyr,
     tidyr,
     caret,

@@ -37,8 +37,6 @@ fs_proteomics <- function(train_IDs,
   rownames(info) <- prot_IDs
 
 
-
-
   # Creating a model matrix
   info <- info %>% transmute(inc3 = as.character(inc3))
 
@@ -74,13 +72,7 @@ fs_proteomics <- function(train_IDs,
                   EntrezID = somamaer_info_edited$EntrezGeneID
                   [match(.$Gene, somamaer_info_edited$SeqId)])
 
-
-
-  # return(rownames(somamaer_info_edited))
-  # return(somamaer_info_edited$EntrezGeneSymbol)
-  # return(topde)
-  # Problem in topde (solved?)
-
+  # Select from topde
   topde_tmp <- dplyr::select(topde, EntrezID, P.Value) %>% na.omit()
   tmp <- tapply(topde_tmp$P.Value, topde_tmp$EntrezID, min)
 
@@ -89,35 +81,27 @@ fs_proteomics <- function(train_IDs,
   names(ranklist) <- names(tmp)
 
   ilmnlist <- vector(mode = "character", length = length(tmp))
-
-
-  # return(topde)
-  # return(length(tmp))
-  # return(length(topde_tmp))
-  # return(filter(topde_tmp, EntrezID == 1000))
-  # return(min(topde_tmp$P.Value))
-  # return((names(tmp)))
-  # return(topde$EntrezID)
-  # return(na.omit(topde$EntrezID))
-  # return(filter(topde, EntrezID == names(tmp)))
-  # return(topde_tmp)
-  # return(names(tmp))
+  names(ilmnlist) <- names(tmp)
 
   # Alternative Code
   tmp2 <-
     dplyr::filter(topde, EntrezID %in% names(tmp) &
                     P.Value %in% tmp)
 
+
   # return(tmp2)
 
-  t_tmp2 <- tmp2 %>% dplyr::select(EntrezID, t)
-  ranklist[as.character(t_tmp2$EntrezID)] <- t_tmp2$t
+  tmp2 <- tmp2 %>% dplyr::select(EntrezID, t, Gene)
+  ranklist[as.character(tmp2$EntrezID)] <- tmp2$t
+  ilmnlist[as.character(tmp2$EntrezID)] <- tmp2$Gene
+
+  # return(ilmnlist)
 
 
-  il <-
-    dplyr::filter(topde, EntrezID %in% names(tmp) &
-                    P.Value %in% tmp)$Gene
-  ilmnlist <- il
+  # il <-
+  #   dplyr::filter(topde, EntrezID %in% names(tmp) &
+  #                   P.Value %in% tmp)$Gene
+  # ilmnlist <- il
 
 
   # return(ranklist)
@@ -169,14 +153,14 @@ fs_proteomics <- function(train_IDs,
     maxSize  = 200
   ) %>% arrange(pval) #%>% filter(padj < 0.1)
 
-  return(columns(fgseaRes))
+  # return((fgseaRes))
 
   # Error in mutating the leadingEdge: Invalid keytype Symbol
   fgseaRes <-
     fgseaRes %>% mutate(
       leadingEdge = mapIdsList(
         x = org.Hs.eg.db,
-        keys = leadingEdge,
+        keys = (fgseaRes$leadingEdge),
         keytype = "ENTREZID",
         column = "SYMBOL"
       )
@@ -192,7 +176,7 @@ fs_proteomics <- function(train_IDs,
   edge_entrez <- AnnotationDbi::select(org.Hs.eg.db,
                                        keys = edge,
                                        columns = "ENTREZID",
-                                       keytype = "Symbol")
+                                       keytype = "SYMBOL")
   probe <- genelist$Probe[genelist$Entrez %in% edge_entrez$ENTREZID]
   dat_selected <- proteomics_data[probe, , drop = F]
 
