@@ -30,17 +30,16 @@ fs_proteomics <- function(train_IDs,
   # Data frame of phenotypes with all used IDs and their inc3 value
   samples <- unlist(train_proteomics_IDs) %>% unique()
   prot_IDs <-
-    data_IDs[match(samples, data_IDs$Clinical), ] %>% dplyr::select("Proteomics") %>% unlist()
+    data_IDs[match(samples, data_IDs$Clinical),] %>% dplyr::select("Proteomics") %>% unlist()
 
   info <-
     phenotype_IDs[as.character(samples), "inc3", drop = FALSE]
   rownames(info) <- prot_IDs
 
-
   # Creating a model matrix
   info <- info %>% transmute(inc3 = as.character(inc3))
 
-  modmatrix <- model.matrix(~ 0 + ., data = info)
+  modmatrix <- model.matrix( ~ 0 + ., data = info)
 
 
   # Select data, fit, contrast
@@ -51,18 +50,13 @@ fs_proteomics <- function(train_IDs,
   contrast <-
     makeContrasts(inc31 - inc30, levels = colnames(coef(fit)))
 
-
   # Temporary data
   tmp <- contrasts.fit(fit, contrast)
   tmp <- eBayes(tmp)
 
-
   # topTable function
   topde <-
     topTable(tmp, sort.by = "P", n = Inf)
-
-
-  # return(topde)
 
   topde <-
     topde %>%
@@ -76,76 +70,40 @@ fs_proteomics <- function(train_IDs,
   topde_tmp <- dplyr::select(topde, EntrezID, P.Value) %>% na.omit()
   tmp <- tapply(topde_tmp$P.Value, topde_tmp$EntrezID, min)
 
-  # Build lists
+  # Create lists
   ranklist <- vector(mode = "numeric", length = length(tmp))
   names(ranklist) <- names(tmp)
 
   ilmnlist <- vector(mode = "character", length = length(tmp))
   names(ilmnlist) <- names(tmp)
 
-  # Alternative Code
+  # Add values to the lists
   tmp2 <-
     dplyr::filter(topde, EntrezID %in% names(tmp) &
                     P.Value %in% tmp)
-
-
-  # return(tmp2)
 
   tmp2 <- tmp2 %>% dplyr::select(EntrezID, t, Gene)
   ranklist[as.character(tmp2$EntrezID)] <- tmp2$t
   ilmnlist[as.character(tmp2$EntrezID)] <- tmp2$Gene
 
-  # return(ilmnlist)
 
-
-  # il <-
-  #   dplyr::filter(topde, EntrezID %in% names(tmp) &
-  #                   P.Value %in% tmp)$Gene
-  # ilmnlist <- il
-
-
-  # return(ranklist)
-  # return(il)
-  # return(sort(ilmnlist))
-
-  # 1:length(tmp)
-  # for (i in 1:length(tmp)) {
-  #   # Select values
-  #   cat("Iter ", i, "\n")
-  #   t <-
-  #     dplyr::filter(topde, EntrezID == names(tmp)[i] &
-  #                     P.Value == tmp[i])$t
-  #   # return(t)
-  #
-  #   il <-
-  #     dplyr::filter(topde, EntrezID == names(tmp)[i] &
-  #                     P.Value == tmp[i])$Gene
-  #
-  #   # Add to list
-  #   ranklist[i] <- t
-  #   ilmnlist[i] <- il
-  # }
-
-  # return(sort(ilmnlist))
-  # return((ranklist))
-
-  # Build dataframe
+  # Build dataframe with the lists
   genelist = data.frame(Entrez = names(ranklist),
                         Probe = ilmnlist,
                         t = ranklist)
 
-  # return(genelist)
+  # Get the pathways
   ranklist = sort(ranklist)
   geneset_reactome = reactomePathways(names(ranklist))
 
-  # Problem with toppw! (not existing)
+  # Add this part for the pathways,
+  # when 100 iterations are implemented in the code
   # geneset_reactome = geneset_reactome[intersect(names(geneset_reactome), toppw)]
 
+  # Set seed
   set.seed(993)
 
-  # return(geneset_reactome)
-
-  # GSEA
+  # Fast GSEA
   fgseaRes <- fgsea(
     pathways = geneset_reactome,
     stats    = ranklist,
@@ -153,22 +111,17 @@ fs_proteomics <- function(train_IDs,
     maxSize  = 200
   ) %>% arrange(pval) #%>% filter(padj < 0.1)
 
-  # return((fgseaRes))
-
-  # Error in mutating the leadingEdge: Invalid keytype Symbol
   fgseaRes <-
     fgseaRes %>% mutate(
       leadingEdge = mapIdsList(
         x = org.Hs.eg.db,
-        keys = (fgseaRes$leadingEdge),
+        keys = fgseaRes$leadingEdge,
         keytype = "ENTREZID",
         column = "SYMBOL"
       )
     )
 
-
-
-  # Save results
+  # Save results from fgseaRes
   saveRDS(fgseaRes, "prot_gsea_final.rds")
 
   # Extract selected features for training
@@ -180,11 +133,8 @@ fs_proteomics <- function(train_IDs,
   probe <- genelist$Probe[genelist$Entrez %in% edge_entrez$ENTREZID]
   dat_selected <- proteomics_data[probe, , drop = F]
 
-  # Save selected data
+  # Save the selected data
   saveRDS(dat_selected, "proteomics_selected.rds")
 
-
-
   return("Feature selection proteomics done!")
-
 }
