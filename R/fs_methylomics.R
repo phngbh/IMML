@@ -1,18 +1,23 @@
-#' Title
+#' Feature Selection Methylomics Data
 #'
-#' @param train_IDs
-#' @param test_IDs
-#' @param data_IDs
-#' @param phenotype_IDs
-#' @param methylomics_data
-#' @param low_lev_path
-#' @param seed
+#' @description The function for the feature selection for methylomics data.
 #'
-#' @return
-#' @export
+#' @param train_IDs Set of training IDs from the `data_partitioning()` function
+#' for the feature selection.
+#' @param test_IDs Set of testing IDs from the `data_partitioning()` function
+#' for the feature selection.
+#' @param data_IDs A table holding all the clinical IDs with the respective IDs
+#' for each modality.
+#' @param phenotype_IDs A table holding the clinical IDs with a variable indicating,
+#' if the disease occurred or not.
+#' @param methylomics_data A table holding the data for the methylomics.
+#' @param low_lev_path The lowest level pathways.
+#' @param seed The possibility to change the seed for the function.
 #'
-#' @examples
+#' @return Returns the methylomics data table with the selected features.
 #'
+#' @author Ulrich Asemann
+
 fs_methylomics <- function(train_IDs,
                            test_IDs,
                            data_IDs,

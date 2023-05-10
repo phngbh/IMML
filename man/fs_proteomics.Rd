@@ -2,7 +2,7 @@
 % Please edit documentation in R/fs_proteomics.R
 \name{fs_proteomics}
 \alias{fs_proteomics}
-\title{Title}
+\title{Feature Selection Proteomics Data}
 \usage{
 fs_proteomics(
   train_IDs,
@@ -16,8 +16,33 @@ fs_proteomics(
 )
 }
 \arguments{
-\item{seed}{}
+\item{train_IDs}{Set of training IDs from the \code{data_partitioning()} function
+for the feature selection.}
+
+\item{test_IDs}{Set of testing IDs from the \code{data_partitioning()} function
+for the feature selection.}
+
+\item{data_IDs}{A table holding all the clinical IDs with the respective IDs
+for each modality.}
+
+\item{phenotype_IDs}{A table holding the clinical IDs with a variable indicating,
+if the disease occurred or not.}
+
+\item{proteomics_data}{A table holding the data for the proteomics.}
+
+\item{low_lev_path}{The lowest level pathways.}
+
+\item{somamaer_info_edited}{An annotation file with additional information
+for the proteomics.}
+
+\item{seed}{The possibility to change the seed for the function.}
+}
+\value{
+Returns the proteomics data table with the selected features.
 }
 \description{
-Title
+The function for the feature selection for proteomics data.
+}
+\author{
+Ulrich Asemann
 }

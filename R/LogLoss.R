@@ -1,3 +1,16 @@
+#' LogLoss Function
+#'
+#' @description The self written LogLoss function for the package.
+#'
+#' @param pred
+#' @param true
+#' @param eps
+#' @param weights
+#'
+#' @return Returns the LogLoss.
+#'
+#' @author Ulrich Asemann
+
 LogLoss <- function(pred,
                     true,
                     eps = 1e-15,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/fs_metabolomics.R
 \name{fs_metabolomics}
 \alias{fs_metabolomics}
-\title{Feature Selection for Metabolomics}
+\title{Feature Selection Metabolomics Data}
 \usage{
 fs_metabolomics(
   train_IDs,
@@ -17,8 +17,34 @@ fs_metabolomics(
 )
 }
 \arguments{
-\item{seed}{}
+\item{train_IDs}{Set of training IDs from the \code{data_partitioning()} function
+for the feature selection.}
+
+\item{test_IDs}{Set of testing IDs from the \code{data_partitioning()} function
+for the feature selection.}
+
+\item{data_IDs}{A table holding all the clinical IDs with the respective IDs
+for each modality.}
+
+\item{phenotype_IDs}{A table holding the clinical IDs with a variable indicating,
+if the disease occurred or not.}
+
+\item{metabolomics_data}{A table holding the data for the metabolomics.}
+
+\item{pathway_list}{A list containing the pathways for the metabolomics.}
+
+\item{low_lev_path}{The lowest level pathways.}
+
+\item{anno_fil}{An annotation file containing additional information for the metabolomics.}
+
+\item{seed}{The possibility to change the seed for the function.}
+}
+\value{
+Returns the metabolomics data table with the selected features.
 }
 \description{
-Feature Selection for Metabolomics
+The function for the feature selection for metabolomics data.
+}
+\author{
+Ulrich Asemann
 }

@@ -1,15 +1,15 @@
-#' caretLogLoss
+#' caretLogLoss Function
+#'
+#' @description The selfwritten caretLogLoss function for the package.
 #'
 #' @param data
 #' @param lev
 #' @param model
 #'
-#' @description Selfmade LogLoss function for the package
+#' @return Returns the caretLogLoss.
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @author Ulrich Asemann
+
 caretLogLoss <- function(data, lev = NULL, model = NULL) {
   cls <- levels(data$obs) #find class names
   loss <- LogLoss(

@@ -1,19 +1,26 @@
 #' Data Partitioning
 #'
 #' @description Returns a list with all training IDs and
-#' a set of 100 shuffled feature selection IDs.
+#' a set of shuffled IDs for feature selection.
+#'
+#' @param phenotype_IDs A table holding the clinical IDs with a variable indicating,
+#' if the disease occurred or not.
+#' @param data_IDs A table holding all the clinical IDs with the respective IDs
+#' for each modality.
+#' @param partitioning A value, that signals what percentage of IDs are used for
+#' training in the feature selection.
+#' @param type This variable signals, if the training or testing set of the
+#' feature selection is returned.
+#' @param amount The number of partitions that are build for feature selection
+#' @param seed The possibility to change the seed, for different results in the
+#' part of the ID shuffling for feature selection.
+#'
+#' @return Returns a list, holding all IDs for model training and a set of
+#' shuffled IDs depending on the chosen amount for each modality. The different
+#' sets for the modalities are hold separately in extra sublists.
 #'
 #' @author Ulrich Asemann
-#'
-#' @param phenotype_IDs
-#' @param data_IDs
-#' @param partitioning
-#' @param type
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 data_partitioning <-
   function(phenotype_IDs,
            data_IDs,
@@ -52,7 +59,7 @@ data_partitioning <-
 
     # Build a list with the training IDs
     for (i in 1:nrow(training_sample_IDs)) {
-      training_IDs <- c(training_IDs, training_sample_IDs[i, ])
+      training_IDs <- c(training_IDs, training_sample_IDs[i,])
       tmp_name <- paste("Training", i)
       names(training_IDs)[i] <- tmp_name
     }
@@ -76,16 +83,16 @@ data_partitioning <-
       for (j in 1:length(data_part)) {
         # Build the feature selection lists, depending on training or testing
         if (type == "testing") {
-          tmp_frame <- frame[-(unlist(data_part[j])), ]
+          tmp_frame <- frame[-(unlist(data_part[j])),]
         } else if (type == "training") {
-          tmp_frame <- frame[(unlist(data_part[j])), ]
+          tmp_frame <- frame[(unlist(data_part[j])),]
         } else {
           return("Please set the type to testing or training!")
         }
 
         # Building the list of the current partition
         for (k in 1:nrow(tmp_frame)) {
-          tmp_list <- c(tmp_list, tmp_frame[k, ])
+          tmp_list <- c(tmp_list, tmp_frame[k,])
           new_name <- paste(list_names[i], j, k)
           names(tmp_list)[k] <- new_name
         }

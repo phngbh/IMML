@@ -2,13 +2,31 @@
 % Please edit documentation in R/fs_clinical.R
 \name{fs_clinical}
 \alias{fs_clinical}
-\title{Title}
+\title{Feature Selection Clinical Data}
 \usage{
 fs_clinical(train_IDs, test_IDs, data_IDs, phenotype_IDs, clinical_data)
 }
 \arguments{
-\item{data_IDs}{}
+\item{train_IDs}{Set of training IDs from the \code{data_partitioning()} function
+for the feature selection.}
+
+\item{test_IDs}{Set of testing IDs from the \code{data_partitioning()} function
+for the feature selection.}
+
+\item{data_IDs}{A table holding all the clinical IDs with the respective IDs
+for each modality.}
+
+\item{phenotype_IDs}{A table holding the clinical IDs with a variable indicating,
+if the disease occurred or not.}
+
+\item{clinical_data}{A table holding the clinical data.}
+}
+\value{
+Returns the clinical data table only with the significant selected features.
 }
 \description{
-Title
+The function for the feature selection for the clinical data.
+}
+\author{
+Ulrich Asemann
 }

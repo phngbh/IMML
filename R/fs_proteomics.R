@@ -1,17 +1,24 @@
-#' Title
+#' Feature Selection Proteomics Data
 #'
-#' @param train_IDs
-#' @param test_IDs
-#' @param data_IDs
-#' @param phenotype_IDs
-#' @param low_lev_path
-#' @param somamaer_info_edited
-#' @param seed
+#' @description The function for the feature selection for proteomics data.
 #'
-#' @return
-#' @export
+#' @param train_IDs Set of training IDs from the `data_partitioning()` function
+#' for the feature selection.
+#' @param test_IDs Set of testing IDs from the `data_partitioning()` function
+#' for the feature selection.
+#' @param data_IDs A table holding all the clinical IDs with the respective IDs
+#' for each modality.
+#' @param phenotype_IDs A table holding the clinical IDs with a variable indicating,
+#' if the disease occurred or not.
+#' @param low_lev_path The lowest level pathways.
+#' @param somamaer_info_edited An annotation file with additional information
+#' for the proteomics.
+#' @param seed The possibility to change the seed for the function.
+#' @param proteomics_data A table holding the data for the proteomics.
 #'
-#' @examples
+#' @return Returns the proteomics data table with the selected features.
+#'
+#' @author Ulrich Asemann
 #'
 fs_proteomics <- function(train_IDs,
                           test_IDs,

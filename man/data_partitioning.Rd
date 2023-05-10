@@ -14,11 +14,31 @@ data_partitioning(
 )
 }
 \arguments{
-\item{type}{}
+\item{phenotype_IDs}{A table holding the clinical IDs with a variable indicating,
+if the disease occurred or not.}
+
+\item{data_IDs}{A table holding all the clinical IDs with the respective IDs
+for each modality.}
+
+\item{partitioning}{A value, that signals what percentage of IDs are used for
+training in the feature selection.}
+
+\item{amount}{The number of partitions that are build for feature selection}
+
+\item{type}{This variable signals, if the training or testing set of the
+feature selection is returned.}
+
+\item{seed}{The possibility to change the seed, for different results in the
+part of the ID shuffling for feature selection.}
+}
+\value{
+Returns a list, holding all IDs for model training and a set of
+shuffled IDs depending on the chosen amount for each modality. The different
+sets for the modalities are hold separately in extra sublists.
 }
 \description{
 Returns a list with all training IDs and
-a set of 100 shuffled feature selection IDs.
+a set of shuffled IDs for feature selection.
 }
 \author{
 Ulrich Asemann

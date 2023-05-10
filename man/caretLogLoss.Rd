@@ -2,13 +2,19 @@
 % Please edit documentation in R/caretLogLoss.R
 \name{caretLogLoss}
 \alias{caretLogLoss}
-\title{caretLogLoss}
+\title{caretLogLoss Function}
 \usage{
 caretLogLoss(data, lev = NULL, model = NULL)
 }
 \arguments{
 \item{model}{}
 }
+\value{
+Returns the caretLogLoss.
+}
 \description{
-Selfmade LogLoss function for the package
+The selfwritten caretLogLoss function for the package.
+}
+\author{
+Ulrich Asemann
 }

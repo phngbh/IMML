@@ -1,13 +1,21 @@
-#' Title
+#' Feature Selection Clinical Data
 #'
-#' @param train_IDs
-#' @param test_IDs
-#' @param data_IDs
+#' @description The function for the feature selection for the clinical data.
 #'
-#' @return
-#' @export
+#' @param train_IDs Set of training IDs from the `data_partitioning()` function
+#' for the feature selection.
+#' @param test_IDs Set of testing IDs from the `data_partitioning()` function
+#' for the feature selection.
+#' @param data_IDs A table holding all the clinical IDs with the respective IDs
+#' for each modality.
+#' @param phenotype_IDs A table holding the clinical IDs with a variable indicating,
+#' if the disease occurred or not.
+#' @param clinical_data A table holding the clinical data.
 #'
-#' @examples
+#' @return Returns the clinical data table only with the significant selected features.
+#'
+#' @author Ulrich Asemann
+
 fs_clinical <-
   function(train_IDs,
            test_IDs,

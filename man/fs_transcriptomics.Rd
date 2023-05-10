@@ -2,7 +2,7 @@
 % Please edit documentation in R/fs_transcriptomics.R
 \name{fs_transcriptomics}
 \alias{fs_transcriptomics}
-\title{Feature Selection for Transcriptomics}
+\title{Feature Selection Transcriptomics Data}
 \usage{
 fs_transcriptomics(
   train_IDs,
@@ -16,8 +16,32 @@ fs_transcriptomics(
 )
 }
 \arguments{
-\item{seed}{}
+\item{train_IDs}{Set of training IDs from the \code{data_partitioning()} function
+for the feature selection.}
+
+\item{test_IDs}{Set of testing IDs from the \code{data_partitioning()} function
+for the feature selection.}
+
+\item{data_IDs}{A table holding all the clinical IDs with the respective IDs
+for each modality.}
+
+\item{phenotype_IDs}{A table holding the clinical IDs with a variable indicating,
+if the disease occurred or not.}
+
+\item{transcriptomics_data}{A table holding the data for the transcriptomics.}
+
+\item{gene_anotation}{An annotation file for the transcriptomics data.}
+
+\item{low_lev_path}{The lowest level pathways}
+
+\item{seed}{The possibility to change the seed for the function.}
+}
+\value{
+Returns the transcriptomics data table with the selected features.
 }
 \description{
-Feature Selection for Transcriptomics
+The function for the feature selection for transcriptomics data.
+}
+\author{
+Ulrich Asemann
 }

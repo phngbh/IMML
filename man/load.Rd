@@ -2,7 +2,7 @@
 % Please edit documentation in R/load.R
 \name{load}
 \alias{load}
-\title{load()}
+\title{Loading necessary data}
 \usage{
 load(
   clinical = FALSE,
@@ -12,9 +12,17 @@ load(
   transcriptomics = FALSE
 )
 }
-\description{
-Loading all necessary data, to build the package
+\arguments{
+\item{transcriptomics}{}
 }
-\examples{
-load()
+\value{
+Loads the selected data to the global environment.
+}
+\description{
+Loading all necessary data for building the package. The values
+for the parameters can be TRUE or FALSE, if the respective data for the
+modality should be oaded or not.
+}
+\author{
+Ulrich Asemann
 }

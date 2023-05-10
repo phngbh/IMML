@@ -1,16 +1,25 @@
-#' Feature Selection for Metabolomics
+#' Feature Selection Metabolomics Data
 #'
-#' @param train_IDs
-#' @param test_IDs
-#' @param data_IDs
-#' @param phenotype_IDs
-#' @param metabolomics_data
-#' @param seed
+#' @description The function for the feature selection for metabolomics data.
 #'
-#' @return
-#' @export
+#' @param train_IDs Set of training IDs from the `data_partitioning()` function
+#' for the feature selection.
+#' @param test_IDs Set of testing IDs from the `data_partitioning()` function
+#' for the feature selection.
+#' @param data_IDs A table holding all the clinical IDs with the respective IDs
+#' for each modality.
+#' @param phenotype_IDs A table holding the clinical IDs with a variable indicating,
+#' if the disease occurred or not.
+#' @param metabolomics_data A table holding the data for the metabolomics.
+#' @param seed The possibility to change the seed for the function.
+#' @param pathway_list A list containing the pathways for the metabolomics.
+#' @param low_lev_path The lowest level pathways.
+#' @param anno_fil An annotation file containing additional information for the metabolomics.
 #'
-#' @examples
+#' @return Returns the metabolomics data table with the selected features.
+#'
+#' @author Ulrich Asemann
+
 fs_metabolomics <-
   function(train_IDs,
            test_IDs,

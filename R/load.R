@@ -1,11 +1,18 @@
-#' load()
+#' Loading necessary data
 #'
-#' @description Loading all necessary data, to build the package
+#' @description Loading all necessary data for building the package. The values
+#' for the parameters can be TRUE or FALSE, if the respective data for the
+#' modality should be oaded or not.
 #'
-#' @return
-#' @export
+#' @param clinical
+#' @param metabolomics
+#' @param methylomics
+#' @param protemoics
+#' @param transcriptomics
 #'
-#' @examples load()
+#' @return Loads the selected data to the global environment.
+#'
+#' @author Ulrich Asemann
 
 load <- function(clinical = FALSE,
                  metabolomics = FALSE,
