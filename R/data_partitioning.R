@@ -28,71 +28,69 @@ data_partitioning <-
            amount = 100,
            type = "training",
            seed = 123) {
-    #
-    # Set seed, to get the same results for training and testing
-    # Can be modified by the user
+    # Set seed, achieving the same results and the complementary testing IDs
+    # for each partition
     set.seed(seed)
 
-    # Variables
+    # Defining variables
     tmp_list <- list()
     training_IDs <- list()
     single_feature_list <- list()
     feature_list <- list()
     return_list <- list()
 
-    # List of feature selection parts
+    # List of feature selection modalities
     list_names <- colnames(data_IDs)
 
-    # The IDs used for training and feature selection
+    # Selecting IDs used for training and feature selection
     IDs <-
       phenotype_IDs %>% dplyr::select(inc3) %>% drop_na() %>% rownames() %>% as.double()
 
-    # A data frame only with phenotype_IDs, that are used for training and feature selection
+    # Data frame with the selected IDs
     new_sample_IDs <- data_IDs %>% filter(Clinical %in% IDs)
 
 
-    # Building a list with the training IDs
-
-    # Only using IDs, that have values in all columns and select the training IDs
+    # Building the modeltraining IDs list
+    # Selecting clinical IDs with IDs for each modality
     training_sample_IDs <-
       new_sample_IDs %>% drop_na() %>% dplyr::select(Clinical)
 
-    # Build a list with the training IDs
+    # Building a list for the modeltraining IDs
     for (i in 1:nrow(training_sample_IDs)) {
-      training_IDs <- c(training_IDs, training_sample_IDs[i,])
-      tmp_name <- paste("Training", i)
+      training_IDs <- c(training_IDs, training_sample_IDs[i, ])
+      tmp_name <- paste("Modeltraining", i)
       names(training_IDs)[i] <- tmp_name
     }
 
-    # Remove the training_IDs from the new_sample_IDs
+    # Remove the modeltraining IDs from the new_sample_IDs
     remove_IDs <- unlist(training_IDs)
     new_sample_IDs <-
       new_sample_IDs %>% filter(!(Clinical %in% remove_IDs))
 
-    # Building a feature selection list for each single feature
+    # Building a feature selection list for each modality
     for (i in 1:length(list_names)) {
       # Select one feature and remove all NA values from the new_sample_IDs list
       frame <-
         new_sample_IDs %>% dplyr::select(list_names[i], Clinical) %>% drop_na() %>% dplyr::select(Clinical)
 
-      # Create a data partitioning with "caret"
+      # Creating data partitions with "caret"
       data_part <-
         caret::createDataPartition(unlist(frame), times = amount, p = partitioning)
 
-      # Go through each of the 100 partitions
+      # Go through all 100 partitions
       for (j in 1:length(data_part)) {
         # Build the feature selection lists, depending on training or testing
         if (type == "testing") {
-          tmp_frame <- frame[-(unlist(data_part[j])),]
+          tmp_frame <- frame[-(unlist(data_part[j])), ]
         } else if (type == "training") {
-          tmp_frame <- frame[(unlist(data_part[j])),]
+          tmp_frame <- frame[(unlist(data_part[j])), ]
         } else {
           return("Please set the type to testing or training!")
         }
 
         # Building the list of the current partition
         for (k in 1:nrow(tmp_frame)) {
-          tmp_list <- c(tmp_list, tmp_frame[k,])
+          tmp_list <- c(tmp_list, tmp_frame[k, ])
           new_name <- paste(list_names[i], j, k)
           names(tmp_list)[k] <- new_name
         }
@@ -116,10 +114,16 @@ data_partitioning <-
       names(feature_list)[i] <- list_names[i]
     }
 
-    # Put training_IDs and feature_list into one
-    return_list <-
-      list("Training IDs" = training_IDs,
-           "Feature Selection IDs" = feature_list)
+    # Put the modeltraining IDs list and feature selection lists into one
+    if (type == "testing") {
+      return_list <-
+        list("Modeltraining IDs" = training_IDs,
+             "Testing Feature Selection IDs" = feature_list)
+    } else if (type == "training") {
+      return_list <-
+        list("Modeltraining IDs" = training_IDs,
+             "Training Feature Selection IDs" = feature_list)
+    }
 
     # Return the completed list
     return(return_list)

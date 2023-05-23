@@ -27,17 +27,18 @@ fs_methylomics <- function(train_IDs,
                            seed = 123) {
   # Selecting the IDs
   train_methylomics_IDs <-
-    train_IDs$`Feature Selection IDs`$Methylomics
+    train_IDs$`Training Feature Selection IDs`$Methylomics
   test_methylomics_IDs <-
-    test_IDs$`Feature Selection IDs`$Methylomics
+    test_IDs$`Testing Feature Selection IDs`$Methylomics
 
   # Data frame of phenotypes with all used IDs and their inc3 value
   samples <- unlist(train_methylomics_IDs) %>% unique()
-  prot_IDs <-
+  meth_IDs <-
     data_IDs[match(samples, data_IDs$Clinical), ] %>% dplyr::select("Methylomics") %>% unlist()
 
   info <-
     phenotype_IDs[as.character(samples), "inc3", drop = FALSE]
+
   rownames(info) <- meth_IDs
 
   # Create a model matrix
@@ -62,6 +63,7 @@ fs_methylomics <- function(train_IDs,
     topTable(tmp, sort.by = "P", n = Inf)
 
   # dualmap450kEID in package champ
+  # data still missing, check packages from phong for file
   data("dualmap450kEID")
 
   # geneset_reactome

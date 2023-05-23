@@ -2,6 +2,8 @@
 #'
 #' @description The function for the feature selection for the clinical data.
 #'
+#'
+#'
 #' @param train_IDs Set of training IDs from the `data_partitioning()` function
 #' for the feature selection.
 #' @param test_IDs Set of testing IDs from the `data_partitioning()` function
@@ -25,9 +27,9 @@ fs_clinical <-
     #
     # Getting IDs
     train_clinical_IDs <-
-      train_IDs$`Feature Selection IDs`$Clinical
+      train_IDs$`Training Feature Selection IDs`$Clinical
     test_clinical_IDs <-
-      test_IDs$`Feature Selection IDs`$Clinical
+      test_IDs$`Tesing Feature Selection IDs`$Clinical
 
     mnsi <- filter(phenotype_IDs,!is.na(inc3))
 

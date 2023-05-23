@@ -32,9 +32,9 @@ fs_metabolomics <-
            seed = 123) {
     # Selecting the IDs
     train_metabolomics_IDs <-
-      train_IDs$`Feature Selection IDs`$Metabolomics
+      train_IDs$`Training Feature Selection IDs`$Metabolomics
     test_metabolomics_IDs <-
-      test_IDs$`Feature Selection IDs`$Metabolomics
+      test_IDs$`Testing Feature Selection IDs`$Metabolomics
 
     # Data frame of phenotypes with all used IDs and their inc3 value
     samples <- unlist(train_metabolomics_IDs) %>% unique()

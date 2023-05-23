@@ -34,9 +34,9 @@ fs_transcriptomics <-
     #
     # Getting the ID sets from the transcriptomics
     train_transcriptomics_IDs <-
-      train_IDs$`Feature Selection IDs`$Transcriptomics
+      train_IDs$`Training Feature Selection IDs`$Transcriptomics
     test_transcriptomics_IDs <-
-      test_IDs$`Feature Selection IDs`$Transcriptomics
+      test_IDs$`Testing Feature Selection IDs`$Transcriptomics
 
     # Frame of phenotypes, with all used transcriptomic IDs and their inc3 value
     samples <- unlist(train_transcriptomics_IDs) %>% unique()

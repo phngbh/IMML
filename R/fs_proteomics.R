@@ -30,9 +30,9 @@ fs_proteomics <- function(train_IDs,
                           seed = 123) {
   # Selecting the IDs
   train_proteomics_IDs <-
-    train_IDs$`Feature Selection IDs`$Proteomics
+    train_IDs$`Training Feature Selection IDs`$Proteomics
   test_proteomics_IDs <-
-    test_IDs$`Feature Selection IDs`$Proteomics
+    test_IDs$`Testing Feature Selection IDs`$Proteomics
 
   # Data frame of phenotypes with all used IDs and their inc3 value
   samples <- unlist(train_proteomics_IDs) %>% unique()
@@ -47,7 +47,6 @@ fs_proteomics <- function(train_IDs,
   info <- info %>% transmute(inc3 = as.character(inc3))
 
   modmatrix <- model.matrix( ~ 0 + ., data = info)
-
 
   # Select data, fit, contrast
   data <- proteomics_data[, rownames(modmatrix)]
