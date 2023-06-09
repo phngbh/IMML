@@ -7,7 +7,7 @@
 #' @export
 #'
 #' @examples
-feature_selection <- function(){
+FeatureSelection <- function(){
 
 
 
