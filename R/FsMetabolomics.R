@@ -286,8 +286,8 @@ FsMetabolomics <-
         fgseaRes <- fgsea(
           pathways = genesetReactome,
           stats    = ranklist,
-          minSize  = 1,
-          # minSize = 5
+          # minSize  = 1,
+          minSize = 5,
           maxSize  = 200
         ) %>% arrange(pval) #%>% filter(padj < 0.3)
 

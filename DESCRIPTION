@@ -29,4 +29,6 @@ Depends:
     themis,
     pROC,
     RobustRankAggreg,
-    knitr
+    knitr,
+    R (>= 2.10)
+LazyData: true

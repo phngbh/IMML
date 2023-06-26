@@ -14,7 +14,7 @@
 #'
 #' @author Ulrich Asemann
 
-load <- function(clinical = FALSE,
+Load <- function(clinical = FALSE,
                  metabolomics = FALSE,
                  methylomics = FALSE,
                  protemoics = FALSE,
@@ -41,11 +41,13 @@ load <- function(clinical = FALSE,
   .GlobalEnv$sample_IDs <- sample_IDs
   .GlobalEnv$phenotypes <- phenotypes
 
-  # data_partitioning tables
+  # DataPartitioning tables
   .GlobalEnv$training_IDs <-
-    data_partitioning(phenotypes, sample_IDs, seed = 124)
+    DataPartitioning(phenotypes, sample_IDs, seed = 124)
   .GlobalEnv$testing_IDs <-
-    data_partitioning(phenotypes, sample_IDs, type = "testing", seed = 124)
+    DataPartitioning(phenotypes, sample_IDs, type = "testing", seed = 124)
+  .GlobalEnv$modeltraining_IDs <-
+    DataPartitioning(phenotypes, sample_IDs, type = "modeltraining", seed = 124)
 
 
   # Clinical
