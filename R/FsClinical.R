@@ -115,7 +115,7 @@ FsClinical <-
     # Set seed
     set.seed(993)
 
-    #Select best features
+    # Select best features
     varFil <- lapply(var, function(x)
       names(x[x > 0]))
     varRra <- aggregateRanks(varFil)

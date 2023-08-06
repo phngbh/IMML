@@ -19,12 +19,12 @@
 #' @author Ulrich Asemann
 
 FsMethylomics <- function(trainIDs,
-                           testIDs,
-                           dataIDs,
-                           phenotypeIDs,
-                           methylomicsData,
-                           lowestLevelPathways,
-                           seed = 123) {
+                          testIDs,
+                          dataIDs,
+                          phenotypeIDs,
+                          methylomicsData,
+                          lowestLevelPathways,
+                          seed = 123) {
   # Selecting the IDs
   trainMethylomicsIDs <-
     trainIDs$`Training Feature Selection IDs`$Methylomics
@@ -34,7 +34,7 @@ FsMethylomics <- function(trainIDs,
   # Data frame of phenotypes with all used IDs and their inc3 value
   samples <- unlist(trainMethylomicsIDs) %>% unique()
   methIDs <-
-    dataIDs[match(samples, dataIDs$Clinical),] %>% dplyr::select("Methylomics") %>% unlist()
+    dataIDs[match(samples, dataIDs$Clinical), ] %>% dplyr::select("Methylomics") %>% unlist()
 
   info <-
     phenotypeIDs[as.character(samples), "inc3", drop = FALSE]
@@ -42,7 +42,7 @@ FsMethylomics <- function(trainIDs,
 
   # Create a model matrix
   info <- info %>% transmute(inc3 = as.character(inc3))
-  modmatrix <- model.matrix( ~ 0 + ., data = info)
+  modmatrix <- model.matrix(~ 0 + ., data = info)
 
   # Select data, fit, contrast
   data <- methylomicsData[, rownames(modmatrix)]
@@ -68,20 +68,14 @@ FsMethylomics <- function(trainIDs,
   for (p in names(genesetReactome)) {
     probes <-
       mapEIDto450k.lv[intersect(genesetReactome[[p]], names(mapEIDto450k.lv))] %>% unlist() %>% unique()
-    # return(probes)
-    # return(genesetReactome[[p]])
     naGenes <-
       setdiff(genesetReactome[[p]], names(mapEIDto450k.lv))
-    # return(naGenes)
     if (length(probes) > 0) {
       genesetReactome[[p]] = c(probes, naGenes)
     } else {
       genesetReactome[[p]] = NULL
     }
   }
-
-  # return(genesetReactome)
-  # return(rownames(topde))
 
   # ranklist
   ranklist <- topde$t
@@ -100,30 +94,11 @@ FsMethylomics <- function(trainIDs,
   ) %>% arrange(pval) %>% filter(padj < 0.05)
 
   edgeMnsi3 <- fgseaRes$leadingEdge %>% unlist() %>% unique()
-  dataSelected <- methylomicsData[edgeMnsi3, ]
+  dataSelected <- methylomicsData[edgeMnsi3,]
 
   # Save data
   saveRDS(dataSelected, "methylomics_selected.rds")
   saveRDS(fgseaRes, "meth_gsea_final.rds")
-
-  # Code is not used
-  # Not needed for the methylomics data
-
-  # # changeing the CpGs to Entrez IDs
-  # for(i in 1:nrow(fgseaRes)){
-  #   fgseaRes$leadingEdge[[i]] <- unname(c(unlist(map450ktoEID.lv[unlist(fgseaRes$leadingEdge[i])])))
-  # }
-  #
-  # # Mapping the CpGs to Entrez ID
-  # fgseaRes <-
-  #   fgseaRes %>% mutate(
-  #     leadingEdge = mapIdsList(
-  #       x = org.Hs.eg.db,
-  #       keys = leadingEdge,
-  #       keytype = "ENTREZID",
-  #       column = "SYMBOL"
-  #     )
-  #   )
 
   return("Feature selection Methylomics done!")
 }

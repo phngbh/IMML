@@ -30,5 +30,6 @@ Depends:
     pROC,
     RobustRankAggreg,
     knitr,
+    snpStats,
     R (>= 2.10)
 LazyData: true

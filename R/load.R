@@ -2,7 +2,7 @@
 #'
 #' @description Loading all necessary data for building the package. The values
 #' for the parameters can be TRUE or FALSE, if the respective data for the
-#' modality should be oaded or not.
+#' modality should be loaded or not.
 #'
 #' @param clinical
 #' @param metabolomics
@@ -29,14 +29,13 @@ Load <- function(clinical = FALSE,
   library(readr)
 
   # remove exponential notation
-  options(scipen = 999)
-
+  options(scipen = 999)#
 
   # General data used for everything
   sample_IDs <-
-    readRDS("C:/Users/ulric/Desktop/Arbeit/data/IMLdata/supporting_files/sample_IDs.rds")
+    readRDS("Add your path here!")
   phenotypes <-
-    readRDS("C:/Users/ulric/Desktop/Arbeit/data/IMLdata/supporting_files/phenotypes.rds")
+    readRDS("Add your path here!")
 
   .GlobalEnv$sample_IDs <- sample_IDs
   .GlobalEnv$phenotypes <- phenotypes
@@ -53,9 +52,7 @@ Load <- function(clinical = FALSE,
   # Clinical
   if (clinical) {
     clinical_processed <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/data/Clinical_data/clinical_processed.rds"
-      )
+      readRDS("Add your path here!")
 
     # Transpose matrix, so its equal to the other data tables
     .GlobalEnv$clinical_processed <- clinical_processed
@@ -64,15 +61,13 @@ Load <- function(clinical = FALSE,
   # Genomics
   if (genomics) {
     geno_annot <- read.csv(
-      "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_genomics/gene_annot.txt",
+      "Add your path here!",
       sep = "",
       check.names = F,
       header = F
     )
     geno_lowest_level_pathways <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_genomics/geno_lowest_level_pathways.rds"
-      )
+      readRDS("Add your path here!")
 
     .GlobalEnv$geno_annot <- geno_annot
     .GlobalEnv$geno_lowest_level_pathways <-
@@ -82,21 +77,13 @@ Load <- function(clinical = FALSE,
   # Metabolomics
   if (metabolomics) {
     meta_lowest_level_pathways <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_metabolomics/meta_lowest_level_pathways.rds"
-      )
+      readRDS("Add your path here!")
     meta_anno_fil <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_metabolomics/meta_anno_fil.rds"
-      )
+      readRDS("Add your path here!")
     meta_pathway_list <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_metabolomics/meta_pathway_list.rds"
-      )
+      readRDS("Add your path here!")
     metabolomics_processed <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/data/Metabolomics/metabolomics_processed.rds"
-      )
+      readRDS("Add your path here!")
 
     .GlobalEnv$meta_lowest_level_pathways <-
       meta_lowest_level_pathways
@@ -108,13 +95,9 @@ Load <- function(clinical = FALSE,
   # Methylomics
   if (methylomics) {
     meth_lowest_level_pathways <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_methylomics/meth_lowest_level_pathways.rds"
-      )
+      readRDS("Add your path here!")
     methylomics_processed <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_methylomics/methylomics_processed.rds"
-      )
+      readRDS("Add your path here!")
 
     .GlobalEnv$meth_lowest_level_pathways <-
       meth_lowest_level_pathways
@@ -125,17 +108,11 @@ Load <- function(clinical = FALSE,
   # Protemoics
   if (protemoics) {
     prot_lowest_level_pathways <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_proteomics/prot_lowest_level_pathways.rds"
-      )
+      readRDS("Add your path here!")
     prot_somamer_info_edited <-
-      read.csv(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_proteomics/prot_somamer_info_edited.csv"
-      )
+      read.csv("Add your path here!")
     proteomics_processed <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/Data/IMLdata/data/Proteomics/proteomics_processed.rds"
-      )
+      readRDS("Add your path here!")
 
     .GlobalEnv$proteomics_processed <-
       proteomics_processed
@@ -147,21 +124,13 @@ Load <- function(clinical = FALSE,
   # Transcriptomics
   if (transcriptomics) {
     trans_lowest_level_pathways <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_transcriptomics/trans_lowest_level_pathways.rds"
-      )
+      readRDS("Add your path here!")
     trans_annotation_HumanHT_v3_final <-
-      read.csv(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_transcriptomics/trans_annotation_HumanHT-12v3_final.csv"
-      )
+      read.csv("Add your path here!")
     trans_gene_information <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_transcriptomics/trans_gene_IDs.rds"
-      )
+      readRDS("Add your path here!")
     transcriptomics_processed <-
-      readRDS(
-        "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/data/Transcriptomics/transcriptomics_processed.rds"
-      )
+      readRDS("Add your path here!")
 
     .GlobalEnv$trans_lowest_level_pathways <-
       trans_lowest_level_pathways

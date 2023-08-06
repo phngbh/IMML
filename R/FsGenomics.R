@@ -1,13 +1,15 @@
-#' Title
+#' Feature Selection Genomics Data
 #'
-#' @param lowestLevelPathways
-#' @param genomicsAnnotation
-#' @param seed
+#' @description The function for the feature selection for the genomics data.
 #'
-#' @return
-#' @export
+#' @param lowestLevelPathways The lowest level pathways for the genomics.
+#' @param genomicsAnnotation An annotation file that is needed for the function to work
+#' @param seed A seed that can be set by the user to achieve the same results
 #'
-#' @examples
+#' @return A text file will be saved in the environment holding the results.
+#'
+#' @author Ulrich Asemann
+
 FsGenomics <- function(lowestLevelPathways,
                        genomicsAnnotation,
                        seed = 123) {
@@ -41,7 +43,7 @@ FsGenomics <- function(lowestLevelPathways,
   # }
   #
   # return(genesetReactome)
-  # # Data was saved in folder "data"
+  # # Data was saved in folder data as "genomics_geneset_reactome.rda"
 
   # Load data
   data("genomics_geneset_reactome")
@@ -57,7 +59,7 @@ FsGenomics <- function(lowestLevelPathways,
     gwasTmp <-
       read.csv(
         paste0(
-          "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_genomics/samples_",
+          "Your path, where the data can be found!/samples_",
           i,
           ".inc3.assoc.logistic"
         ),
@@ -91,9 +93,9 @@ FsGenomics <- function(lowestLevelPathways,
     }
 
     fgseaResTmp$leadingEdge_gen = lapply(fgseaResTmp$leadingEdge,
-                                          function(x)
-                                            return(gwasTmpUnq$GENE[match(x, gwasTmpUnq$SNP)] %>%
-                                                     unique()))
+                                         function(x)
+                                           return(gwasTmpUnq$GENE[match(x, gwasTmpUnq$SNP)] %>%
+                                                    unique()))
     gsea[[i]] = fgseaResTmp
   }
 
@@ -109,17 +111,15 @@ FsGenomics <- function(lowestLevelPathways,
   pwlistAgg <- aggregateRanks(pathways)
   pwlistAgg$adjP <- pwlistAgg$Score * length(pathways)
   pwlistAgg$adjP <- p.adjust(pwlistAgg$adjP, method = "fdr")
-  toppw <- rownames(pwlistAgg[pwlistAgg$adjP < 0.05,])
+  toppw <- rownames(pwlistAgg[pwlistAgg$adjP < 0.05, ])
   # if adjP doesn't work, use code below
   # toppw <- rownames(pwlistAgg[pwlistAgg$adjP,])
 
   # Read data
-  gwas = read.csv(
-    paste0(
-      "C:/Users/ulric/Desktop/Arbeit/data/IMLdata/download/fs_genomics/all.inc3.assoc.logistic"
-    ),
-    sep = ""
-  ) %>%
+  gwas = read.csv(paste0(
+    "Your path where the data can be found!/all.inc3.assoc.logistic"
+  ),
+  sep = "") %>%
     filter(SNP %in% genomicsAnnotation$V2)
 
   # Do gwas
@@ -163,7 +163,5 @@ FsGenomics <- function(lowestLevelPathways,
     quote = F
   )
 
-
   return("Feature selection genomics done!")
-
 }

@@ -62,7 +62,6 @@ FsMetabolomics <-
     set.seed(seed)
 
     # Going through each set of IDs
-    # 1:length(trainMetabolomicsIDs)
     for (i in 1:length(trainMetabolomicsIDs)) {
       cat("Iter ", i, "\n")
 

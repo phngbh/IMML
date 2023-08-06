@@ -1,7 +1,6 @@
 #' Data Partitioning
 #'
-#' @description Returns a list with all training IDs and
-#' a set of shuffled IDs for feature selection.
+#' @description Builds a data partition for the provided sets of IDs.
 #'
 #' @param phenotypeIDs A table holding the clinical IDs with a variable indicating,
 #' if the disease occurred or not.
@@ -10,14 +9,15 @@
 #' @param partitioning A value, that signals what percentage of IDs are used for
 #' training in the feature selection.
 #' @param type This variable signals, if the training or testing set of the
-#' feature selection is returned or the modeltraining sets.
+#' feature selection is returned. Otherwise the type can be set to "modeltraining"
+#' to return the set of IDs that are used for modeltraining.
 #' @param numPartitions The number of partitions that are build for feature selection
 #' @param seed The possibility to change the seed, for different results in the
 #' part of the ID shuffling for feature selection.
 #'
-#' @return Returns a list, holding all IDs for model training and a set of
-#' shuffled IDs depending on the chosen amount of partitions for each modality.
-#' The different sets for the modalities are hold separately in extra sublists.
+#' @return The return of the function can be three different outcomes depending
+#' on the selected type. The return is always a list containing the IDs for feature
+#' selection or modeltraining.
 #'
 #' @author Ulrich Asemann
 
@@ -58,9 +58,7 @@ DataPartitioning <-
 
     # Building a list with the modeltraining IDs
     for (i in 1:nrow(trainingSampleIDs)) {
-      trainingIDs <- c(trainingIDs, trainingSampleIDs[i,])
-      # tmpName <- paste("Modeltraining", i)
-      # names(trainingIDs)[i] <- tmpName
+      trainingIDs <- c(trainingIDs, trainingSampleIDs[i, ])
     }
 
     if (type == "modeltraining") {
@@ -83,10 +81,8 @@ DataPartitioning <-
 
         # Putting the lists together
         tmpList <-
-          list(c(
-            "Fold" = partitionTrainingIDs,
-            list("Fold.5" = partitionTestingIDs)
-          ))
+          list(c("Fold" = partitionTrainingIDs,
+                 list("Fold.5" = partitionTestingIDs)))
 
         returnList <- c(returnList, tmpList)
         names(returnList)[i] <- paste("Modeltraining", i)
@@ -117,16 +113,16 @@ DataPartitioning <-
       for (j in 1:length(dataPartitions)) {
         # Build the feature selection lists, depending on training or testing
         if (type == "testing") {
-          tmpFrame <- frame[-(unlist(dataPartitions[j])),]
+          tmpFrame <- frame[-(unlist(dataPartitions[j])), ]
         } else if (type == "training") {
-          tmpFrame <- frame[(unlist(dataPartitions[j])),]
+          tmpFrame <- frame[(unlist(dataPartitions[j])), ]
         } else {
           return("Please set the type to testing or training!")
         }
 
         # Building the list of the current partition
         for (k in 1:nrow(tmpFrame)) {
-          tmpList <- c(tmpList, tmpFrame[k,])
+          tmpList <- c(tmpList, tmpFrame[k, ])
           newName <- paste(listNames[i], j, k)
           names(tmpList)[k] <- newName
         }

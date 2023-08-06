@@ -28,7 +28,6 @@ fs_transcriptomics <-
            geneAnotation,
            lowestLevelPathways,
            seed = 123) {
-
     # Getting the ID sets from the transcriptomics
     trainTranscriptomicsIDs <-
       trainIDs$`Training Feature Selection IDs`$Transcriptomics
@@ -38,7 +37,7 @@ fs_transcriptomics <-
     # Frame of phenotypes, with all used transcriptomic IDs and their inc3 value
     samples <- unlist(trainTranscriptomicsIDs) %>% unique()
     tranIDs <-
-      dataIDs[match(samples, dataIDs$Clinical), ] %>% dplyr::select("Transcriptomics") %>% unlist()
+      dataIDs[match(samples, dataIDs$Clinical),] %>% dplyr::select("Transcriptomics") %>% unlist()
 
     info <-
       phenotypeIDs[as.character(samples), "inc3", drop = FALSE]
@@ -47,7 +46,7 @@ fs_transcriptomics <-
     # Creating a model matrix
     info <- info %>% transmute(inc3 = as.character(inc3))
 
-    modmatrix <- model.matrix(~ 0 + ., data = info)
+    modmatrix <- model.matrix( ~ 0 + ., data = info)
 
     # Creating a list for the gsea
     gsea = list(
@@ -61,9 +60,7 @@ fs_transcriptomics <-
     set.seed(seed)
 
     # Going through each set of IDs
-    # Normal length of Iteration:
-    # i in 1:length(trainTranscriptomicsIDs)
-    for (i in 1:5) {
+    for (i in 1:length(trainTranscriptomicsIDs)) {
       cat("Iter ", i, "\n")
       # Selecting the dataIDs with one set of the dataPartitioning
       clinIDs <- unlist(trainTranscriptomicsIDs[[i]])
@@ -74,7 +71,7 @@ fs_transcriptomics <-
 
       # Getting the temporary data needed for calculations
       tmpData <-
-        transcriptomicsData[, !is.na(match(colnames(transcriptomicsData), tmpTranscriptomicsIDs))]
+        transcriptomicsData[,!is.na(match(colnames(transcriptomicsData), tmpTranscriptomicsIDs))]
 
       cat("...DE analysis\n")
 
@@ -189,7 +186,7 @@ fs_transcriptomics <-
       # Training/Testing
       probelistTmp <- gsea$ilmn[[i]]
       testID <-
-        colnames(transcriptomicsData[, !(colnames(transcriptomicsData) %in% resamples)])
+        colnames(transcriptomicsData[,!(colnames(transcriptomicsData) %in% resamples)])
       xTrain <-
         transcriptomicsData[probelistTmp, resamples] %>% t()
       yTrain <- info[resamples, "inc3"]
@@ -282,8 +279,8 @@ fs_transcriptomics <-
 
     # Final gene set enrichment analysis on the selected pathways
     fit <-
-      lmFit(transcriptomicsData[, !is.na(match(colnames(transcriptomicsData),
-                                                rownames(modmatrix))), drop = F],
+      lmFit(transcriptomicsData[,!is.na(match(colnames(transcriptomicsData),
+                                              rownames(modmatrix))), drop = F],
             modmatrix[!is.na(match(rownames(modmatrix), colnames(transcriptomicsData))), , drop = F])
 
     contrast <-

@@ -4,13 +4,8 @@
 #' depending on the modality that is chosen by the user
 #'
 #' @return The result of another function, depending on the chosen modailty
-#' @export
 #'
-#' @examples
+#' @author Ulrich Asemann
 FeatureSelection <- function(){
-
-
-
-
 
 }
