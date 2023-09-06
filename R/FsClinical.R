@@ -1,43 +1,54 @@
 #' Feature Selection Clinical Data
 #'
-#' @description The function for the feature selection for the clinical data.
+#' @description Feature selection for clinical data using elastic net models.
 #'
-#' @param trainIDs Set of training IDs from the `data_partitioning()` function
-#' for the feature selection.
-#' @param testIDs Set of testing IDs from the `data_partitioning()` function
-#' for the feature selection.
-#' @param dataIDs A table holding all the clinical IDs with the respective IDs
-#' for each modality.
-#' @param phenotypeIDs A table holding the clinical IDs with a variable indicating,
-#' if the disease occurred or not.
-#' @param clinicalData A table holding the clinical data.
+#' @param trainIDs Set of training IDs from the `DataPartitioning()` function
+#'   for the feature selection.
+#' @param testIDs Set of testing IDs from the `DataPartitioning()` function for
+#'   the feature selection.
+#' @param dataIDs A data.frame with samples as rows and the data modalities as
+#'   columns. Row names represent sample IDs. It holds the data IDs of a sample
+#'   for each modality. If for a sample there is no data for a modality, it has
+#'   to be indicated by NA.
+#' @param phenotypeIDs A data.frame with samples as rows and sample IDs as row
+#'   names. Columns are phenotypes of interest. If for a sample no information
+#'   about a phenotype is available, it has to be indicated by NA.
+#' @param phenotype The name of the column in phenotypeIDs, which will be used
+#'   in the analysis.
+#' @param clinicalData A data.frame with samples as rows and sample IDs as row
+#'   names. Columns are the clinical variables and are named accordingly.
+#' @param seed The seed used for random number generation. Using the same seed
+#'   ensures reproducibility.
 #'
-#' @return Returns the clinical data table only with the significant selected features.
+#' @return Returns clincalData subset to the selected features.
 #'
-#' @author Ulrich Asemann
+#' @author Ulrich Asemann & Wilhelm Glaas
 
 FsClinical <-
   function(trainIDs,
            testIDs,
            dataIDs,
            phenotypeIDs,
-           clinicalData) {
-    # Getting IDs
-    trainClinicalIDs <-
-      trainIDs$`Training Feature Selection IDs`$Clinical
-    testClinicalIDs <-
-      testIDs$`Testing Feature Selection IDs`$Clinical
+           phenotype,
+           clinicalData,
+           seed = 123) {
+    # Set seed
+    set.seed(seed)
 
-    filteredPhenotypeIDs <- filter(phenotypeIDs, !is.na(inc3))
+    # Save row names as a column
+    dataIDs <- dataIDs %>%
+      tibble::rownames_to_column(var = "sampleIDs")
+    phenotypeIDs <- phenotypeIDs %>%
+      tibble::rownames_to_column(var = "sampleIDs")
 
-    indicator <- filteredPhenotypeIDs$inc3
+    merged = merge(dataIDs, phenotypeIDs, by = 'sampleIDs') %>%
+      select(sampleIDs, any_of(phenotype)) %>% drop_na()
 
-    names(indicator) <- rownames(filteredPhenotypeIDs)
-
-    indicator <- na.omit(indicator)
-
+    indicator <- as.vector(merged)[[2]]
+    names(indicator) <- as.vector(merged)[[1]]
     indicator <-
-      ifelse(indicator == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
+      ifelse(indicator == 1, "One", "Zero") %>%
+      factor(levels = c("One", "Zero"))
 
     # Do elastic net
     # Build control
@@ -57,12 +68,12 @@ FsClinical <-
     var = list()
 
     # Loop through all partitions
-    for (i in 1:length(trainClinicalIDs)) {
+    for (i in 1:length(trainIDs)) {
       cat("Fold", i, "\n")
 
       # Select the IDs for the partition
-      trainID <- unlist(trainClinicalIDs[[i]])
-      testID <- unlist(testClinicalIDs[[i]])
+      trainID <- unlist(trainIDs[[i]])
+      testID <- unlist(testIDs[[i]])
 
       # Using the rownames of the selected IDs for x also for y
       # NA values are no longer used this way
@@ -79,7 +90,6 @@ FsClinical <-
         ifelse(yTrain == "One", table(yTrain)[[2]] / table(yTrain)[[1]], 1)
 
       # Building the fit
-      set.seed(993)
       fit <- caret::train(
         x = xTrain,
         y = yTrain,
@@ -112,8 +122,6 @@ FsClinical <-
       var[[i]] <- vari
     }
 
-    # Set seed
-    set.seed(993)
 
     # Select best features
     varFil <- lapply(var, function(x)
@@ -122,11 +130,13 @@ FsClinical <-
     varRra$adjP <- varRra$Score * 100
     varRra$adjP <- p.adjust(varRra$adjP, "fdr")
     varSel <- varRra %>% dplyr::filter(adjP < 0.05)
-    varSel <- as.numeric(unname(unlist(select(varSel, "Name"))))
+    varSel <- unname(unlist(select(varSel, "Name")))
 
     # Save the data
-    saveRDS(dplyr::select(clinicalData, all_of(varSel)),
-            "clinical_selected.rds")
+    #saveRDS(dplyr::select(clinicalData, all_of(varSel)),
+    #        "clinical_selected.rds")
 
-    return("Elasticnet clinical done!")
+    result <- select(clinicalData, all_of(varSel))
+
+    return(result)
   }

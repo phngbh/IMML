@@ -59,7 +59,7 @@ DataPartitioning <-
         rownames() %>%
         as.double()
 
-    # save row names as a column
+    # Save row names as a column
     dataIDs <- dataIDs %>% tibble::rownames_to_column(var = "sampleID")
 
     # Data frame with the selected IDs
@@ -74,26 +74,23 @@ DataPartitioning <-
 
 
     # Building a list with the modeltraining IDs
-    trainingIDs <- trainingSampleIDs$sampleID
+    trainingIDs <- as.double(trainingSampleIDs$sampleID)
 
-    # Create partitions for the modeltraining
-    kFolds <-
-      caret::createMultiFolds(trainingIDs,
-                                 times = iter,
-                                 k = k)
+    iterations <-
+      caret::createDataPartition(trainingIDs, times = iter, p = partitioning)
+
     returnList <- list()
-    for (i in 0:(iter - 1)) {
+    for (i in 1:iter) {
       tmpFoldList <- list()
-      for (j in 1:k) {
-        # Creating the training and testing lists for each fold
-        tmpIds <- kFolds[[i * k + j]]
-        trainIdsFold <- trainingIDs[tmpIds]
-        testIdsFold <- trainingIDs[-tmpIds]
 
-        tmpList <- list('Training' = trainIdsFold, 'Testing' = testIdsFold)
-        tmpFoldList[[paste0('Fold', j)]] = tmpList
-      }
-      returnList[[paste0('Iteration', i+1)]] = tmpFoldList
+      testIDs <- trainingIDs[-iterations[[i]]]
+      trainIDs <- createFolds(trainingIDs[iterations[[i]]], k = k)
+      trainIDs <- lapply(trainIDs, function(x) trainingIDs[x])
+
+      tmpFoldList[['Training']] <- trainIDs
+      tmpFoldList[['Testing']] <- testIDs
+
+      returnList[[paste0('Iteration', i)]] <- tmpFoldList
     }
 
     # append to the final list
