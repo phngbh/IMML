@@ -1,47 +1,56 @@
 #' Feature Selection Transcriptomics Data
 #'
-#' @description The function for the feature selection for transcriptomics data.
+#' @description Feature selection for transcriptomics data using GSEA.
 #'
-#' @param trainIDs Set of training IDs from the `data_partitioning()` function
-#' for the feature selection.
-#' @param testIDs Set of testing IDs from the `data_partitioning()` function
-#' for the feature selection.
-#' @param dataIDs A table holding all the clinical IDs with the respective IDs
-#' for each modality.
-#' @param phenotypeIDs A table holding the clinical IDs with a variable indicating,
-#' if the disease occurred or not.
+#' @param trainIDs Set of training IDs from the `DataPartitioning()` function
+#'   for the feature selection.
+#' @param testIDs Set of testing IDs from the `DataPartitioning()` function for
+#'   the feature selection.
+#' @param dataIDs A data.frame with samples as rows and the data modalities as
+#'   columns. It holds the data IDs of a sample for each modality. If for a
+#'   sample there is no data for a modality, it has to be indicated by NA.
+#' @param phenotypeIDs A data.frame with samples as rows and sample IDs as row
+#'   names. Columns are phenotypes of interest. If for a sample no information
+#'   about a phenotype is available, it has to be indicated by NA.
+#' @param phenotype The name of the column in phenotypeIDs, which will be used
+#'   in the analysis.
 #' @param transcriptomicsData A table holding the data for the transcriptomics.
 #' @param geneAnotation An annotation file for the transcriptomics data.
-#' @param lowestLevelPathways The lowest level pathways
-#' @param seed The possibility to change the seed for the function.
+#' @param lowestLevelPathways A list of pathways used in GSEA.
+#' @param seed The seed used for random number generation. Using the same seed
+#'   ensures reproducibility.
 #'
-#' @return Returns the transcriptomics data table with the selected features.
+#' @return Returns transcriptomicsData subset to the selected features.
 #'
-#' @author Ulrich Asemann
+#' @author Ulrich Asemann & Wilhelm Glaas
+#'
+#' @export
 
-fs_transcriptomics <-
+FsTranscriptomics <-
   function(trainIDs,
            testIDs,
            dataIDs,
            phenotypeIDs,
+           phenotype,
            transcriptomicsData,
            geneAnotation,
            lowestLevelPathways,
            seed = 123) {
-    # Getting the ID sets from the transcriptomics
-    trainTranscriptomicsIDs <-
-      trainIDs$`Training Feature Selection IDs`$Transcriptomics
-    testTranscriptomicsIDs <-
-      testIDs$`Testing Feature Selection IDs`$Transcriptomics
 
-    # Frame of phenotypes, with all used transcriptomic IDs and their inc3 value
-    samples <- unlist(trainTranscriptomicsIDs) %>% unique()
-    tranIDs <-
-      dataIDs[match(samples, dataIDs$Clinical),] %>% dplyr::select("Transcriptomics") %>% unlist()
+    # Save row names as a column
+    dataIDs <- dataIDs %>%
+      tibble::rownames_to_column(var = "sampleIDs")
+    phenotypeIDs <- phenotypeIDs %>%
+      tibble::rownames_to_column(var = "sampleIDs")
 
-    info <-
-      phenotypeIDs[as.character(samples), "inc3", drop = FALSE]
-    rownames(info) <- tranIDs
+    # Making a data frame with the phenotype info and transcriptomic IDs
+    merged <- merge(dataIDs, phenotypeIDs, by = "sampleIDs")
+    info <- merged %>% select("Transcriptomics", any_of(phenotype)) %>%
+      drop_na() %>% tibble::column_to_rownames(var = "Transcriptomics")
+
+    # Removing all samples not relevant for transcriptomics feature selection
+    modelIDs <- dataIDs %>% drop_na() %>% select("Transcriptomics")
+    info <- info %>% filter(!(row.names(info) %in% modelIDs$Transcriptomics))
 
     # Creating a model matrix
     info <- info %>% transmute(inc3 = as.character(inc3))
@@ -60,18 +69,17 @@ fs_transcriptomics <-
     set.seed(seed)
 
     # Going through each set of IDs
-    for (i in 1:length(trainTranscriptomicsIDs)) {
+    for (i in 1:length(trainIDs)) {
       cat("Iter ", i, "\n")
       # Selecting the dataIDs with one set of the dataPartitioning
-      clinIDs <- unlist(trainTranscriptomicsIDs[[i]])
+      #clinIDs <- unlist(trainTranscriptomicsIDs[[i]])
 
-      tmpTranscriptomicsIDs <-
-        dataIDs %>% filter(Clinical %in% clinIDs) %>%
-        dplyr::select(Transcriptomics) %>% as.list() %>% unlist()
+      tmpTranscriptomicsIDs <- unlist(trainIDs[[i]])
 
       # Getting the temporary data needed for calculations
       tmpData <-
-        transcriptomicsData[,!is.na(match(colnames(transcriptomicsData), tmpTranscriptomicsIDs))]
+        transcriptomicsData[, !is.na(match(colnames(transcriptomicsData),
+                                          tmpTranscriptomicsIDs))]
 
       cat("...DE analysis\n")
 
@@ -90,17 +98,23 @@ fs_transcriptomics <-
 
       # contrast
       contrast <-
-        makeContrasts(inc31 - inc30, levels = colnames(coef(fit)))
+        makeContrasts(contrasts = paste0(phenotype, "1 - ", phenotype, "0"),
+                      levels = colnames(coef(fit)))
 
       # contrasts.fit
       tmp <- contrasts.fit(fit, contrast)
 
       tmp <- eBayes(tmp)
 
+      geneAnotation = geneAnotation %>%
+        mutate(symbol = unlist(mget(geneAnotation$Probe_Id,illuminaHumanv3SYMBOL)),
+               EntrezID = unlist(mget(geneAnotation$Probe_Id,illuminaHumanv3ENTREZID)),
+               gene = unlist(mget(geneAnotation$Probe_Id,illuminaHumanv3GENENAME)))
+
       # topTable function
       topde <-
         topTable(tmp, sort.by = "P", n = Inf) %>% mutate(Probe = rownames(.)) %>%
-        mutate(Name = geneAnotation$symbol[match(.$Probe, geneAnotation$Probe_Id)],
+        mutate(Name = geneAnotation$ILMN_Gene[match(.$Probe, geneAnotation$Probe_Id)],
                EntrezID = geneAnotation$EntrezID[match(.$Probe, geneAnotation$Probe_Id)])
 
       cat("...GSEA\n")
@@ -131,7 +145,6 @@ fs_transcriptomics <-
 
       # Sorting the ranklist
       ranklist <- sort(ranklist)
-
 
       # Muting warning messages for now
       suppressMessages({
@@ -189,11 +202,11 @@ fs_transcriptomics <-
         colnames(transcriptomicsData[,!(colnames(transcriptomicsData) %in% resamples)])
       xTrain <-
         transcriptomicsData[probelistTmp, resamples] %>% t()
-      yTrain <- info[resamples, "inc3"]
+      yTrain <- info[resamples, phenotype]
       yTrain <-
         ifelse(yTrain == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
       xTest <- transcriptomicsData[probelistTmp, testID] %>% t()
-      yTest <- info[testID, "inc3"]
+      yTest <- info[testID, phenotype]
       yTest <-
         ifelse(yTest == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
 
@@ -284,7 +297,8 @@ fs_transcriptomics <-
             modmatrix[!is.na(match(rownames(modmatrix), colnames(transcriptomicsData))), , drop = F])
 
     contrast <-
-      makeContrasts(inc31 - inc30, levels = colnames(coef(fit)))
+      makeContrasts(contrasts = paste0(phenotype, "1 - ", phenotype, "0"),
+                    levels = colnames(coef(fit)))
 
 
     tmp <- contrasts.fit(fit, contrast)
@@ -323,7 +337,6 @@ fs_transcriptomics <-
     # Sorting the ranklist
     ranklist <- sort(ranklist)
 
-    # Geneset reactome
     # Muteing warning messages for now
     suppressMessages({
       suppressWarnings({
@@ -372,11 +385,11 @@ fs_transcriptomics <-
           genelist$Gene[genelist$EntrezID %in% edgeEntrez$ENTREZID]
         dataSelected <- transcriptomicsData[probe, , drop = FALSE]
 
-        # Saving the data in a new frame
-        saveRDS(dataSelected, "transcriptomics_selected.rds")
-
       })
     })
+
+    # Saving the data in a new frame
+    saveRDS(dataSelected, "transcriptomics_selected.rds")
 
     return("Feature selection transcriptomics done!")
   }
