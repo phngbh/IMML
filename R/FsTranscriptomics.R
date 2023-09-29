@@ -14,9 +14,11 @@
 #'   about a phenotype is available, it has to be indicated by NA.
 #' @param phenotype The name of the column in phenotypeIDs, which will be used
 #'   in the analysis.
-#' @param transcriptomicsData A table holding the data for the transcriptomics.
-#' @param geneAnotation An annotation file for the transcriptomics data.
-#' @param lowestLevelPathways A list of pathways used in GSEA.
+#' @param transcriptomicsData A data.frame with genes as rows and gene IDs as
+#'   row names. Columns are samples with the sample IDs as column names.
+#' @param geneAnnotation A data.frame of gene IDs and corresponding gene
+#'   symbols, has at least 3 columns: "ID", "Symbol" and "EntrezID".
+#' @param pathwayList A list of pathways used in GSEA.
 #' @param seed The seed used for random number generation. Using the same seed
 #'   ensures reproducibility.
 #'
@@ -33,8 +35,8 @@ FsTranscriptomics <-
            phenotypeIDs,
            phenotype,
            transcriptomicsData,
-           geneAnotation,
-           lowestLevelPathways,
+           geneAnnotation,
+           pathwayList,
            seed = 123) {
 
     # Save row names as a column
@@ -45,351 +47,193 @@ FsTranscriptomics <-
 
     # Making a data frame with the phenotype info and transcriptomic IDs
     merged <- merge(dataIDs, phenotypeIDs, by = "sampleIDs")
-    info <- merged %>% select("Transcriptomics", any_of(phenotype)) %>%
+    info <- merged %>% dplyr::select("Transcriptomics", any_of(phenotype)) %>%
       drop_na() %>% tibble::column_to_rownames(var = "Transcriptomics")
 
     # Removing all samples not relevant for transcriptomics feature selection
-    modelIDs <- dataIDs %>% drop_na() %>% select("Transcriptomics")
+    modelIDs <- dataIDs %>% drop_na() %>% dplyr::select("Transcriptomics")
     info <- info %>% filter(!(row.names(info) %in% modelIDs$Transcriptomics))
 
     # Creating a model matrix
-    info <- info %>% transmute(inc3 = as.character(inc3))
+    target <- info %>% transmute(inc3 = as.character(inc3))
 
-    modmatrix <- model.matrix( ~ 0 + ., data = info)
+    # some of transcIDs which are in dataIDs are not in transcriptomicsData
+    data <- transcriptomicsData[, rownames(target)[rownames(target) %in% colnames(transcriptomicsData)]]
+    rm(transcriptomicsData)
 
-    # Creating a list for the gsea
-    gsea = list(
-      edge = list(),
-      ilmn = list(),
-      auc = list(),
-      pathway = list()
-    )
+    modmatrix <- model.matrix( ~ 0 + ., data = target)
+    modmatrix <- modmatrix[colnames(data), ]
 
-    # seed
+    gsea <- list(edge = list(), ilmn = list(), auc = list(), pathway = list())
     set.seed(seed)
 
-    # Going through each set of IDs
-    for (i in 1:length(trainIDs)) {
-      cat("Iter ", i, "\n")
-      # Selecting the dataIDs with one set of the dataPartitioning
-      #clinIDs <- unlist(trainTranscriptomicsIDs[[i]])
 
-      tmpTranscriptomicsIDs <- unlist(trainIDs[[i]])
+    for (i in 1:length(trainIDs)){
+      cat("Iter ",i,"\n")
 
-      # Getting the temporary data needed for calculations
-      tmpData <-
-        transcriptomicsData[, !is.na(match(colnames(transcriptomicsData),
-                                          tmpTranscriptomicsIDs))]
+      # some of transcIDs which are in trainIDs are not in data
+      trainIDs[[i]] <- trainIDs[[i]][!(trainIDs[[i]] %in% setdiff(trainIDs[[i]], colnames(data)))]
+      testIDs[[i]] <- testIDs[[i]][!(testIDs[[i]] %in% setdiff(testIDs[[i]], colnames(data)))]
+
+      dat_tmp <- data[, as.character(trainIDs[[i]])]
 
       cat("...DE analysis\n")
-
-      # Temporary model matrix
-      tmpMod <- modmatrix[colnames(tmpData), , drop = FALSE]
-
-      # Testing
-      if (any(table(tmpMod[, 1]) < 2) |
-          any(table(tmpMod[, 2]) < 2)) {
+      mod_tmp <- modmatrix[as.character(trainIDs[[i]]),]
+      if( any(table(mod_tmp[,1]) < 2) | any(table(mod_tmp[,2]) < 2)){
         cat("......One of the factor levels has less than 2 observations => Stop!")
         next
       }
-
-      # lmFit
-      fit <- lmFit(tmpData, tmpMod)
-
-      # contrast
-      contrast <-
-        makeContrasts(contrasts = paste0(phenotype, "1 - ", phenotype, "0"),
-                      levels = colnames(coef(fit)))
-
-      # contrasts.fit
+      fit <- lmFit(dat_tmp, mod_tmp)
+      contrast <- makeContrasts(contrasts = paste0(phenotype,"1-",phenotype,"0"), levels = colnames(coef(fit)))
       tmp <- contrasts.fit(fit, contrast)
-
       tmp <- eBayes(tmp)
-
-      geneAnotation = geneAnotation %>%
-        mutate(symbol = unlist(mget(geneAnotation$Probe_Id,illuminaHumanv3SYMBOL)),
-               EntrezID = unlist(mget(geneAnotation$Probe_Id,illuminaHumanv3ENTREZID)),
-               gene = unlist(mget(geneAnotation$Probe_Id,illuminaHumanv3GENENAME)))
-
-      # topTable function
-      topde <-
-        topTable(tmp, sort.by = "P", n = Inf) %>% mutate(Probe = rownames(.)) %>%
-        mutate(Name = geneAnotation$ILMN_Gene[match(.$Probe, geneAnotation$Probe_Id)],
-               EntrezID = geneAnotation$EntrezID[match(.$Probe, geneAnotation$Probe_Id)])
+      topde <- topTable(tmp, sort.by = "P", n = Inf) %>% mutate(ID = rownames(.)) %>%
+        mutate(Name = geneAnnotation$Symbol[match(.$ID,geneAnnotation$ID)],
+               EntrezID = geneAnnotation$EntrezID[match(.$ID,geneAnnotation$ID)])
 
       cat("...GSEA\n")
-
-      # Adding Additional variables (each iteration)
-      topdeTmp <-
-        topde %>% dplyr::select(EntrezID, P.Value) %>% na.omit()
-
-      topdeP <- tapply(topdeTmp$P.Value, topdeTmp$EntrezID, min)
-
-      # Initializing the ranklist
-      ranklist <- vector(mode = "numeric", length = length(topdeP))
-      names(ranklist) = names(topdeP)
-
-      # Temporary data frame with all values
-      tmp <-
-        filter(topde, EntrezID %in% names(topdeP) &
-                 P.Value %in% topdeP)
-
-      # Adding values to the ranklist vector
-      tTmp <- tmp %>% dplyr::select(EntrezID, t)
-      ranklist[as.character(tTmp$EntrezID)] <- tTmp$t
-
-      # Initializing the genelistTmp variable
-      genelistTmp <-
-        tmp %>% dplyr::select(Probe, EntrezID, t, Name)
-      rownames(genelistTmp) <- as.character(1:nrow(genelistTmp))
-
-      # Sorting the ranklist
+      topde.tmp <- dplyr::select(topde, EntrezID, P.Value) %>% na.omit()
+      topde.p <- tapply(topde.tmp$P.Value, topde.tmp$EntrezID, min) # Only select the most significant probe for each gene
+      ranklist <- vector(mode = "numeric", length = length(topde.p))
+      names(ranklist) <- names(topde.p)
+      ilmnlist <- vector(mode = "character", length = length(topde.p))
+      for(l in 1:length(topde.p)){
+        t <- filter(topde, EntrezID == names(topde.p)[l] & P.Value == topde.p[l])$t
+        il <- filter(topde, EntrezID == names(topde.p)[l] & P.Value == topde.p[l])$ID
+        ranklist[l] = t
+        ilmnlist[l] = il
+      }
+      genelist_tmp <- data.frame(Entrez = names(ranklist), Probe = ilmnlist, t = ranklist) %>%
+        mutate(Name = topde$Name[match(.$Entrez, topde$EntrezID)])
       ranklist <- sort(ranklist)
-
-      # Muting warning messages for now
-      suppressMessages({
-        suppressWarnings({
-          # genesetReactome
-          genesetReactome <- reactomePathways(names(ranklist))
-          genesetReactome <-
-            genesetReactome[intersect(names(genesetReactome), lowestLevelPathways)]
-
-          # Set seed
-          set.seed(seed)
-
-          # fgsea function
-          fgseaTmp <- fgsea(
-            pathways = genesetReactome,
-            stats = ranklist,
-            minSize = 15,
-            maxSize = 200,
-            eps = 0
-          ) %>% arrange(pval) %>% filter(padj < 0.1)
-        })
-      })
-
-      # Test
-      if (nrow(fgseaTmp) == 0) {
-        print("No significant pathway found")
+      geneset_reactome <- reactomePathways(names(ranklist))
+      geneset_reactome <- geneset_reactome[intersect(names(geneset_reactome),pathwayList)]
+      set.seed(seed)
+      fgseaRes_tmp <- fgsea(pathways = geneset_reactome,
+                            stats    = ranklist,
+                            minSize  = 15,
+                            maxSize  = 200,
+                            eps = 0) %>% arrange(pval) %>% filter(padj < 0.1)
+      if (nrow(fgseaRes_tmp) == 0){
+        message("No significant pathway found")
         next
       }
-
-      # Defining edgeTmp
-      edgeTmp <- fgseaTmp$leadingEdge %>% unlist() %>% unique()
-
-      # Add values to list
-      gsea$edge[[i]] <- edgeTmp
-      gsea$ilmn[[i]] <-
-        genelistTmp$Probe[match(edgeTmp, genelistTmp$EntrezID)]
-      gsea$pathway[[i]] <- fgseaTmp
+      edge_tmp = fgseaRes_tmp$leadingEdge %>% unlist() %>% unique()
+      gsea$edge[[i]] = edge_tmp
+      gsea$ilmn[[i]] = genelist_tmp$Probe[match(edge_tmp, genelist_tmp$Entrez)]
+      gsea$pathway[[i]] = fgseaRes_tmp
 
       cat("...Elastic net\n")
 
-      # Test
-      if (is.null(gsea$ilmn[[i]])) {
-        print("No significant pathway found")
+      if(is.null(gsea$ilmn[[i]])){
+        message("No significant pathway found")
         next
       }
 
-      # Transcriptomic IDs used for training
-      resamples <-
-        transcriptomicsData[, colnames(transcriptomicsData) %in% tmpTranscriptomicsIDs] %>%
-        colnames()
+      probelistTmp = gsea$ilmn[[i]]
+      x_train = data[probelistTmp, as.character(trainIDs[[i]])] %>% t()
+      y_train = target[as.character(trainIDs[[i]]), phenotype]
+      y_train = ifelse(y_train == 1, "One", "Zero") %>% factor(levels = c("One","Zero"))
+      x_test = data[probelistTmp, as.character(testIDs[[i]])] %>% t()
+      y_test = target[as.character(testIDs[[i]]), phenotype]
+      y_test = ifelse(y_test == 1, "One", "Zero") %>% factor(levels = c("One","Zero"))
 
-      # Training/Testing
-      probelistTmp <- gsea$ilmn[[i]]
-      testID <-
-        colnames(transcriptomicsData[,!(colnames(transcriptomicsData) %in% resamples)])
-      xTrain <-
-        transcriptomicsData[probelistTmp, resamples] %>% t()
-      yTrain <- info[resamples, phenotype]
-      yTrain <-
-        ifelse(yTrain == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
-      xTest <- transcriptomicsData[probelistTmp, testID] %>% t()
-      yTest <- info[testID, phenotype]
-      yTest <-
-        ifelse(yTest == 1, "One", "Zero") %>% factor(levels = c("One", "Zero"))
-
-      # Control
-      myControl <- trainControl(
-        method = "repeatedcv",
-        number = 5,
+      my_control <- trainControl(
+        method="repeatedcv",
+        number=5,
         repeats = 2,
-        savePredictions = "final",
-        classProbs = TRUE,
-        summaryFunction = twoClassSummary,
+        savePredictions="final",
+        classProbs=TRUE,
+        summaryFunction=twoClassSummary,
         sampling = "smote",
-        allowParallel = TRUE
+        allowParallel = T
       )
-
-      # Set seed
       set.seed(seed)
+      fit <- caret::train(x = x_train,
+                          y = y_train,
+                          method="glmnet",
+                          metric="ROC",
+                          tuneLength = 20,
+                          maximize = T,
+                          trControl=my_control,
+                          importance = TRUE)
+      pred = predict(fit, x_test, s = "lambda.min", type = "prob")$One
+      roc <- roc(response = y_test, predictor = pred, levels = c("Zero","One"))
+      auc = auc(roc)
+      gsea$auc[[i]] = auc
 
-      # Create fit
-      fit <- train(
-        x = xTrain,
-        y = yTrain,
-        method = "glmnet",
-        metric = "ROC",
-        tuneLength = 20,
-        maximize = TRUE,
-        trControl = myControl,
-        importance = TRUE
-      )
-
-      # Prediction
-      pred <- predict(fit,
-                      xTest,
-                      s = "lambda.min",
-                      type = "prob")$One
-
-      roc <- roc(
-        response = yTest,
-        predictor = pred,
-        levels = c("Zero", "One")
-      )
-
-      auc <- auc(roc)
-
-      # Adding to list
-      gsea$auc[[i]] <- auc
     }
 
-    # saveRDS(gsea, "gsea_test_list.rds")
-
-    # Select the top significant pathways
-    keep <- vector("logical", length = length(gsea$auc))
-
-    for (i in 1:length(keep)) {
-      if (is.null(gsea$auc[[i]])) {
+    #Select the top significant pathways
+    keep = vector("logical",length = length(gsea$auc))
+    for (i in 1:length(keep)){
+      if (is.null(gsea$auc[[i]])){
         next
-      } else if (gsea$auc[[i]] <= 0.5) {
+      } else if (gsea$auc[[i]] <= 0.5){
         next
       } else {
-        keep[i] <- TRUE
+        keep[i] = TRUE
       }
     }
 
-    pwlist <- gsea$pathway[keep]
-
-    pathways <- list(pw <- list(),
-                     pval <- list(),
-                     NES <- list())
-    for (i in 1:length(pwlist)) {
-      if (is.null(pwlist[[i]])) {
+    pwlist = gsea$pathway[keep]
+    pathways = list(pw = list(), pval = list(), NES = list())
+    for (i in 1: length(pwlist)){
+      if(is.null(pwlist[[i]])){
         next
       }
-      pathways$pw[[i]] <- pwlist[[i]]$pathway
-      pathways$pval[[i]] <- pwlist[[i]]$pval
-      pathways$NES[[i]] <- pwlist[[i]]$NES
+      pathways$pw[[i]] = pwlist[[i]]$pathway
+      pathways$pval[[i]] = pwlist[[i]]$pval
+      pathways$NES[[i]] = pwlist[[i]]$NES
     }
-
-    pwlistAgg <- aggregateRanks(pathways$pw)
-    pwlistAgg$adjP <- pwlistAgg$Score * length(pathways$pw)
-    pwlistAgg$adjP <- p.adjust(pwlistAgg$adjP, method = "fdr")
-
-    toppw <- rownames(filter(pwlistAgg, adjP < 0.05))
-
-    # Final gene set enrichment analysis on the selected pathways
-    fit <-
-      lmFit(transcriptomicsData[,!is.na(match(colnames(transcriptomicsData),
-                                              rownames(modmatrix))), drop = F],
-            modmatrix[!is.na(match(rownames(modmatrix), colnames(transcriptomicsData))), , drop = F])
-
-    contrast <-
-      makeContrasts(contrasts = paste0(phenotype, "1 - ", phenotype, "0"),
-                    levels = colnames(coef(fit)))
+    pwlist_agg = aggregateRanks(pathways$pw)
+    pwlist_agg$adjP = pwlist_agg$Score*length(pathways$pw)
+    pwlist_agg$adjP = p.adjust(pwlist_agg$adjP, method = "fdr")
+    toppw = rownames(filter(pwlist_agg, adjP < 0.05))
 
 
+    #Final gene set enrichment analysis on the selected pathways
+    cat("Final GSEA\n")
+    fit = lmFit(data, modmatrix)
+    contrast = makeContrasts(contrasts = paste0(phenotype,"1-",phenotype,"0"), levels = colnames(coef(fit)))
     tmp <- contrasts.fit(fit, contrast)
     tmp <- eBayes(tmp)
+    topde <- topTable(tmp, sort.by = "P", n = Inf)
+    topde = topde %>% mutate(ID = rownames(topde)) %>%
+      mutate(Name = geneAnnotation$Symbol[match(.$ID,geneAnnotation$ID)],
+             EntrezID = geneAnnotation$EntrezID[match(.$ID,geneAnnotation$ID)])
+    topde.tmp = dplyr::select(topde, EntrezID, P.Value) %>% na.omit()
+    tmp = tapply(topde.tmp$P.Value, topde.tmp$EntrezID, min)
+    ranklist = vector(mode = "numeric", length = length(tmp))
+    names(ranklist) = names(tmp)
+    ilmnlist = vector(mode = "character", length = length(tmp))
+    for(i in 1:length(tmp)){
+      t = filter(topde, EntrezID == names(tmp)[i] & P.Value == tmp[i])$t
+      il = filter(topde, EntrezID == names(tmp)[i] & P.Value == tmp[i])$ID
+      ranklist[i] = t
+      ilmnlist[i] = il
+    }
+    genelist = data.frame(Entrez = names(ranklist), Probe = ilmnlist, t = ranklist)
+    ranklist = sort(ranklist)
+    geneset_reactome = reactomePathways(names(ranklist))
+    geneset_reactome = geneset_reactome[intersect(names(geneset_reactome),toppw)]
 
-    topde <- topTable(tmp,
-                      sort.by = "P",
-                      n = Inf)
-    topde <- topde %>%
-      mutate(Gene = rownames(topde)) %>%
-      mutate(Name = geneAnotation$symbol[match(.$Gene, geneAnotation$Probe_Id)],
-             EntrezID = geneAnotation$EntrezID[match(.$Gene, geneAnotation$Probe_Id)])
+    set.seed(seed)
+    fgseaRes <- fgsea(pathways = geneset_reactome,
+                      stats    = ranklist,
+                      minSize  = 15,
+                      maxSize  = 200) %>% arrange(pval)
 
-    topdeTmp <-
-      topde %>% dplyr::select(EntrezID, P.Value) %>% na.omit()
+    #Extract selected features for training
+    edge = fgseaRes$leadingEdge %>% unlist() %>% unique()
+    #edge_entrez = AnnotationDbi::select(org.Hs.eg.db, keys=edge, columns="ENTREZID", keytype="SYMBOL")
+    probe = genelist$Probe[genelist$Entrez %in% edge]
 
-    topdeP <- tapply(topdeTmp$P.Value, topdeTmp$EntrezID, min)
+    return(list(selected_feature = probe, gsea_result = fgseaRes))
 
-    ranklist <- vector(mode = "numeric",
-                       length = length(topdeP))
-    names(ranklist) <- names(topdeP)
-
-    # Temporary data frame with all values
-    tmp <-
-      filter(topde, EntrezID %in% names(topdeP) &
-               P.Value %in% topdeP)
-
-    # Adding values to the ranklist vector
-    tTmp <- tmp %>% dplyr::select(EntrezID, t)
-    ranklist[as.character(tTmp$EntrezID)] <- tTmp$t
-
-    # Initializing the genelist variable
-    genelist <- tmp %>% dplyr::select(Gene, EntrezID, t, Name)
-    rownames(genelist) <- as.character(1:nrow(genelist))
-
-    # Sorting the ranklist
-    ranklist <- sort(ranklist)
-
-    # Muteing warning messages for now
-    suppressMessages({
-      suppressWarnings({
-        # genesetReactome
-        genesetReactome <- reactomePathways(names(ranklist))
-        genesetReactome <-
-          genesetReactome[intersect(names(genesetReactome), toppw)]
-
-        # Set seed
-        set.seed(seed)
-
-        # fgsea function
-        fgseaRes <- fgsea(
-          pathways = genesetReactome,
-          stats = ranklist,
-          minSize = 15,
-          maxSize = 200
-        ) %>% arrange(pval) #%>% filter(padj < 0.1)
-
-        # return(fgseaRes)
-
-        # Adding values to leadingEdge
-        fgseaRes <-
-          fgseaRes %>% mutate(
-            leadingEdge = mapIdsList(
-              x = org.Hs.eg.db,
-              keys = leadingEdge,
-              keytype = "ENTREZID",
-              column = "SYMBOL"
-            )
-          )
-
-        # Saving the result to the enviroment
-        saveRDS(fgseaRes, "trans_gsea_final.rds")
-
-        # Extract selected features for training
-        edge <- fgseaRes$leadingEdge %>% unlist() %>% unique()
-        edgeEntrez <-
-          AnnotationDbi::select(
-            org.Hs.eg.db,
-            keys = edge,
-            columns = "ENTREZID",
-            keytype = "SYMBOL"
-          )
-        probe <-
-          genelist$Gene[genelist$EntrezID %in% edgeEntrez$ENTREZID]
-        dataSelected <- transcriptomicsData[probe, , drop = FALSE]
-
-      })
-    })
 
     # Saving the data in a new frame
-    saveRDS(dataSelected, "transcriptomics_selected.rds")
+    #saveRDS(dataSelected, "transcriptomics_selected.rds")
 
     return("Feature selection transcriptomics done!")
   }
