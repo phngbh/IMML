@@ -23,6 +23,8 @@
 #' @return Returns clincalData subset to the selected features.
 #'
 #' @author Ulrich Asemann & Wilhelm Glaas
+#'
+#' @export
 
 FsClinical <-
   function(trainIDs,
@@ -32,8 +34,6 @@ FsClinical <-
            phenotype,
            clinicalData,
            seed = 123) {
-    # Set seed
-    set.seed(seed)
 
     # Save row names as a column
     dataIDs <- dataIDs %>%
@@ -41,8 +41,8 @@ FsClinical <-
     phenotypeIDs <- phenotypeIDs %>%
       tibble::rownames_to_column(var = "sampleIDs")
 
-    merged = merge(dataIDs, phenotypeIDs, by = 'sampleIDs') %>%
-      select(sampleIDs, any_of(phenotype)) %>% drop_na()
+    merged <- merge(dataIDs, phenotypeIDs, by = "sampleIDs") %>%
+      select(Clinical, any_of(phenotype)) %>% drop_na()
 
     indicator <- as.vector(merged)[[2]]
     names(indicator) <- as.vector(merged)[[1]]
@@ -90,6 +90,7 @@ FsClinical <-
         ifelse(yTrain == "One", table(yTrain)[[2]] / table(yTrain)[[1]], 1)
 
       # Building the fit
+      set.seed(seed)
       fit <- caret::train(
         x = xTrain,
         y = yTrain,

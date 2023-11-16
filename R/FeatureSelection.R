@@ -1,4 +1,4 @@
-#' Feature Selection
+#' Feature Selection Superfunction
 #'
 #' @description Performs feature selection on the modalities specified by the
 #'   user.
@@ -24,9 +24,12 @@
 #' @param seed The seed used for random number generation. Using the same seed
 #'   ensures reproducibility.
 #'
-#' @return The result of another function, depending on the chosen modailty
+#' @return The result of another function, depending on the chosen modality
 #'
 #' @author Ulrich Asemann & Wilhelm Glaas
+#'
+#' @export
+
 FeatureSelection <-
   function(dataPart,
            modalities,
@@ -47,14 +50,16 @@ FeatureSelection <-
       }
     }
 
-    fsTrain <- dataPart$`Training Feature Selection IDs`
-    fsTest <- dataPart$`Testing Feature Selection IDs`
+    fsTrain <- dataPart$trainingFeatureSelectionIDs
+    fsTest <- dataPart$testingFeatureSelectionIDs
 
 
     returnList <- case_when(modalities == 'Genomics' ~
                               FsGenomics(),
                             modalities == 'Transcriptomics' ~
-                              FsTranscriptomics(),
+                              FsTranscriptomics(trainIDs = fsTrain$Transciptomics,
+                                                testIDs = fsTest$Transcriptomics,
+                                                ),
                             modalities == 'Proteomics' ~
                               FsProteomics(),
                             modalities == 'Metabolomics' ~

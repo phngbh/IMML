@@ -27,6 +27,8 @@
 #'   respectively.
 #'
 #' @author Ulrich Asemann & Wilhelm Glaas
+#'
+#' @export
 
 DataPartitioning <-
   function(phenotypeIDs,
@@ -94,7 +96,7 @@ DataPartitioning <-
     }
 
     # append to the final list
-    finalList <- c(finalList, "Modeltraining" = list(returnList))
+    finalList <- c(finalList, "modelTraining" = list(returnList))
 
 
     # Remove the modeltraining IDs from the newSampleIDs
@@ -139,8 +141,8 @@ DataPartitioning <-
     }
 
     finalList <- c(finalList,
-                   "Testing Feature Selection IDs" = list(testFeatureList),
-                   "Training Feature Selection IDs" = list(trainFeatureList))
+                   "testingFeatureSelectionIDs" = list(testFeatureList),
+                   "trainingFeatureSelectionIDs" = list(trainFeatureList))
 
     # Return the completed list
     return(finalList)
