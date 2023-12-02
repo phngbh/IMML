@@ -1,20 +1,23 @@
 #' Feature Selection Methylomics Data
 #'
-#' @description The function for the feature selection for methylomics data.
+#' @description Feature selection for methylomics data using GSEA.
 #'
 #' @param trainIDs Set of training IDs from the `data_partitioning()` function
-#' for the feature selection.
-#' @param testIDs Set of testing IDs from the `data_partitioning()` function
-#' for the feature selection.
-#' @param dataIDs A table holding all the clinical IDs with the respective IDs
-#' for each modality.
-#' @param phenotypeIDs A table holding the clinical IDs with a variable indicating,
-#' if the disease occurred or not.
+#'   for the feature selection.
+#' @param testIDs Set of testing IDs from the `data_partitioning()` function for
+#'   the feature selection.
+#' @param dataIDs A data.frame with samples as rows and the data modalities as
+#'   columns. It holds the data IDs of a sample for each modality. If for a
+#'   sample there is no data for a modality, it has to be indicated by NA.
+#' @param phenotypeIDs A data.frame with samples as rows and sample IDs as row
+#'   names. Columns are phenotypes of interest. If for a sample no information
+#'   about a phenotype is available, it has to be indicated by NA.
 #' @param methylomicsData A table holding the data for the methylomics.
-#' @param lowestLevelPathways The lowest level pathways.
-#' @param seed The possibility to change the seed for the function.
+#' @param lowestLevelPathways A list of pathways used in GSEA.
+#' @param seed The seed used for random number generation. Using the same seed
+#'   ensures reproducibility.
 #'
-#' @return Returns the methylomics data table with the selected features.
+#' @return Returns methylomicsData subset to the selected features.
 #'
 #' @author Ulrich Asemann
 

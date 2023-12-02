@@ -1,167 +1,81 @@
 #' Feature Selection Genomics Data
 #'
-#' @description The function for the feature selection for the genomics data.
+#' @description Feature selection for genomics data using GSEA.
 #'
-#' @param lowestLevelPathways The lowest level pathways for the genomics.
-#' @param genomicsAnnotation An annotation file that is needed for the function to work
-#' @param seed A seed that can be set by the user to achieve the same results
+#' @param trainIDs Set of training IDs from the `data_partitioning()` function
+#'   for the feature selection.
+#' @param testIDs Set of testing IDs from the `data_partitioning()` function for
+#'   the feature selection.
+#' @param dataIDs A data.frame with samples as rows and the data modalities as
+#'   columns. It holds the data IDs of a sample for each modality. If for a
+#'   sample there is no data for a modality, it has to be indicated by NA.
+#' @param phenotypeIDs A data.frame with samples as rows and sample IDs as row
+#'   names. Columns are phenotypes of interest. If for a sample no information
+#'   about a phenotype is available, it has to be indicated by NA.
+#' @param phenotype The name of the column in phenotypeIDs, which will be used
+#'   in the analysis.
+#' @param binaryFilePrefix The file path to the .bim/.bed files used. Only
+#'   specify the prefix without the file types.
+#' @param geneLocFile The file path to the gene location file to be used.
+#' @param geneSetFile The file path to the gene set file to be used.
+#' @param outputPrefix The prefix of the output file.
+#' @param seed The seed used for random number generation. Using the same seed
+#'   ensures reproducibility.
 #'
 #' @return A text file will be saved in the environment holding the results.
 #'
-#' @author Ulrich Asemann
+#' @author Wilhelm Glaas
+#'
+#' @export
 
-FsGenomics <- function(lowestLevelPathways,
-                       genomicsAnnotation,
+FsGenomics <- function(trainIDs,
+                       testIDs,
+                       dataIDs,
+                       phenotypeIDs,
+                       phenotype,
+                       binaryFilePrefix,
+                       geneLocFile,
+                       geneSetFile,
+                       outputPrefix,
                        seed = 123) {
-  # # Geneset reactome
-  # genesetReactome <-
-  #   reactomePathways(levels(as.factor(as.character(
-  #     genomicsAnnotation$V1
-  #   ))))
-  # genesetReactome <-
-  #   genesetReactome[intersect(names(genesetReactome), lowestLevelPathways)]
-  #
-  # Loop through all possible pathways
-  # length(names(genesetReactome)) = 1990
-  #
-  # for (p in names(genesetReactome)) {
-  #   iter <- match(p, names(genesetReactome))
-  #   cat("Pathway:", iter, "\n")
-  #
-  #   gen <-
-  #     intersect(levels(as.factor(as.character(
-  #       genomicsAnnotation$V1
-  #     ))), genesetReactome[[p]])
-  #   df <- filter(genomicsAnnotation, V1 %in% as.integer(gen))
-  #   na_genes <- setdiff(genesetReactome[[p]], levels(as.factor(as.character(geno_annot$V1))))
-  #   if (length(gen) > 0) {
-  #     genesetReactome[[p]] <- c(df$V2 %>% unique(), na_genes)
-  #   } else {
-  #     genesetReactome[[p]] <- NULL
-  #     cat("no pathway")
-  #   }
-  # }
-  #
-  # return(genesetReactome)
-  # # Data was saved in folder data as "genomics_geneset_reactome.rda"
 
-  # Load data
-  data("genomics_geneset_reactome")
-  genesetReactome <- genomics_geneset_reactome
-
-  # Define variables
-  gsea = list()
-
-  for (i in 1:100) {
-    cat("Iter", i, "\n")
-
-    # Loading the data for the iteration
-    gwasTmp <-
-      read.csv(
-        paste0(
-          "Your path, where the data can be found!/samples_",
-          i,
-          ".inc3.assoc.logistic"
-        ),
-        sep = ""
-      ) %>%
-      filter(SNP %in% genomicsAnnotation$V2)
-
-    # Select the needed data
-    gwasTmp$GENE <-
-      genomicsAnnotation$V1[match(gwasTmp$SNP, genomicsAnnotation$V2)]
-    gwasTmpUnq <- gwasTmp %>% distinct(STAT, GENE, .keep_all = T)
-    ranklist <- gwasTmpUnq$STAT
-    names(ranklist) <- gwasTmpUnq$SNP
-    ranklist <- sort(ranklist)
-
-    # Set seed
-    set.seed(seed)
-
-    # Do fgsea
-    fgseaResTmp <- fgsea(
-      pathways = genesetReactome,
-      stats    = ranklist,
-      eps = 0,
-      minSize = 15,
-      maxSize  = 500
-    ) %>% arrange(pval) #%>% filter(padj < 5e-8)
-
-    if (nrow(fgseaResTmp) == 0) {
-      message("No significant pathway found\n")
-      next
-    }
-
-    fgseaResTmp$leadingEdge_gen = lapply(fgseaResTmp$leadingEdge,
-                                         function(x)
-                                           return(gwasTmpUnq$GENE[match(x, gwasTmpUnq$SNP)] %>%
-                                                    unique()))
-    gsea[[i]] = fgseaResTmp
+  # make samples dir
+  dir.create('samples')
+  for (i in 1:length(trainIDs)) {
+    write.table(data.frame(V1 = trainIDs[[i]], V2 = trainIDs[[i]]),
+                file = file.path(getwd(), paste0("samples/samples_",i,".txt")),
+                col.names = F, row.names = F, sep = "\t")
   }
+  allIds = c(trainIDs[[1]], testIDs[[1]])
+  write.table(data.frame(V1 = allIds, V2 = allIds),
+              file = file.path(getwd(), "samples/samples_fs.txt"),
+              col.names = F, row.names = F, sep = "\t")
 
-  # Pathways
-  pathways = list()
-  for (i in 1:length(gsea)) {
-    if (is.null(gsea[[i]])) {
-      next
-    }
-    pathways[[i]] = gsea[[i]]$pathway
-  }
+  # make phenotype file
+  merged = merge(rownames_to_column(dataIDs, var = 'ID'),
+                 rownames_to_column(phenotypeIDs, var = 'ID'), by = "ID")
+  merged = data.frame(merged$Genomics, merged$Genomics, merged[phenotype]) %>%
+            drop_na()
+  colnames(merged) = c('FID', 'IID', 'CKD')
+  merged$CKD = merged$CKD + 1
+  merged = merged[order(merged[['CKD']], merged[['FID']]),]
+  write.table(merged, 'phenotype_file.txt', quote = F, row.names = F, sep = '\t')
+  rm(merged)
 
-  pwlistAgg <- aggregateRanks(pathways)
-  pwlistAgg$adjP <- pwlistAgg$Score * length(pathways)
-  pwlistAgg$adjP <- p.adjust(pwlistAgg$adjP, method = "fdr")
-  toppw <- rownames(pwlistAgg[pwlistAgg$adjP < 0.05, ])
-  # if adjP doesn't work, use code below
-  # toppw <- rownames(pwlistAgg[pwlistAgg$adjP,])
-
-  # Read data
-  gwas = read.csv(paste0(
-    "Your path where the data can be found!/all.inc3.assoc.logistic"
-  ),
-  sep = "") %>%
-    filter(SNP %in% genomicsAnnotation$V2)
-
-  # Do gwas
-  gwas$GENE <-
-    genomicsAnnotation$V1[match(gwas$SNP, genomicsAnnotation$V2)]
-  gwasMnsi3Unq <- gwas %>% distinct(STAT, GENE, .keep_all = T)
-  ranklist <- gwasMnsi3Unq$STAT
-  names(ranklist) <- gwasMnsi3Unq$SNP
-  ranklist <- sort(ranklist)
-
-  # Final fgsea
-  fgseaRes <- fgsea(
-    pathways = genesetReactome[toppw],
-    stats    = ranklist,
-    eps = 0,
-    minSize = 15,
-    maxSize  = 500
-  ) %>% arrange(pval)
-
-  fgseaRes$leadingEdge_gen <- lapply(fgseaRes$leadingEdge,
-                                     function(x)
-                                       return(gwasMnsi3Unq$GENE[match(x, gwasMnsi3Unq$SNP)] %>%
-                                                unique()))
-
-  fgseaRes$leadingEdge_s <- lapply(fgseaRes$leadingEdge_gen,
-                                   function(x)
-                                     sort(x) %>% paste0(collapse = " ")) %>% unlist()
-  fgseaRes$similarity <- sapply(fgseaRes$leadingEdge_s,
-                                function(x)
-                                  agrep(x, fgseaRes$leadingEdge_s, max = 0.2))
-  fgseaResFil <- distinct(fgseaRes, similarity, .keep_all = T)
-
-  edge <- fgseaRes$leadingEdge %>% unlist() %>% unique()
-
-  # Write data into file
-  write.table(
-    data.frame(V1 = edge),
-    file = "edge_snp.txt",
-    col.names = F,
-    row.names = F,
-    quote = F
+  # run magma script
+  command = paste(
+    system.file('magma.sh', package = 'IMLpackage'),
+    getwd(),
+    binaryFilePrefix,
+    geneLocFile,
+    file.path(getwd(), 'samples'),
+    file.path(getwd(), 'phenotype_file.txt'),
+    geneSetFile,
+    outputPrefix,
+    system.file(package = 'IMLpackage'),
+    length(trainIDs)
   )
+  system(command)
 
   return("Feature selection genomics done!")
 }
