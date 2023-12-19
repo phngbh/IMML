@@ -4,34 +4,17 @@ An interpretable multimodal machine learning framework that utilizes prior biolo
 ## User guide
 Currently IMML is implemented as an **R** package. However it will be implemented as a command line tool for greater compatibility. The program's behavior will be customizable trough a config file. For ease of use the following directory structure can be used to avoid specifying the location of each input file.
 ```
-. IMML_input
-├── data_partionining
+. 
+├── input
 │   ├── sample_IDs.rds
-│   └── phenotypes.rds
-└── feature_selection
-    ├── clinical
-    │   └── clinical_data.rds
-    ├── genomics
-    │   ├── bifilename.txt
-    │   ├── geneset.txt
-    │   ├── genomics_processed.bed
-    │   ├── genomics_processed.bim
-    │   ├── genomics_processed.fam
-    │   ├── genomics_processed.log
-    │   ├── NCBI37.3.gene.loc
-    │   └── phenotype_file.txt
-    ├── metabolomics
-    │   ├── metabolite_annotation.csv
-    │   └── metabolomics_data.rds
-    ├── methylomics
-    │   ├── methyl_anno.rds
-    │   └── methylomics_data.rds
-    ├── proteomics
-    │   ├── prot_anno.rds
-    │   └── proteomics_data.rds
-    └── transcriptomics
-        ├── transcript_annotation.csv
-        └── transcript_data.rds
+│   ├── phenotypes.rds
+│   ├── ...
+│   └── clinical_data.rds
+└── output
+    ├── clinical_selected.rds
+    ├── ...
+    ├── final_model.rds
+    └── plotting.html
 ```
 
 
