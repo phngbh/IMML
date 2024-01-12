@@ -51,7 +51,7 @@ dirlist=(subsets annotates magma_gene magma_geneset)
 
 echo Extract SNPs associated to significant genes in gene-level analysis | sed G
 # Extract and aggregate significant genes 
-Rscript /home/willy/Helmholtz/new/extract_sig_genes.R $wdir $output ${n_iter}
+Rscript $(dirname $0)/R/extract_sig_genes.R $wdir $output ${n_iter}
 
 if [ -f ${output}_associated_SNPs.txt ]; then
     nr=$(wc -l < ${output}_associated_SNPs.txt)
@@ -81,7 +81,7 @@ magma --bfile ./fs_${output} --gene-annot ./annotates/annotates.genes.annot --ph
 awk -v OFS=' ' '/^[^#]/ {for (i=2; i<=NF; i++) if ($i ~ /^[0-9]+:[0-9]+$/) print $1, $i}' ./annotates/annotates.genes.annot > ./annotates/gene_annot.txt
 
 # Final GSEA to extract the leading edge SNPs
-Rscript /home/willy/Helmholtz/new/final_gsea.R ${output} $wdir ${n_iter}
+Rscript $(dirname $0)/R/final_gsea.R ${output} $wdir ${n_iter} ${genesetfile}
 
 if [ -f ${output}_leadingEdge_SNPs.txt ]; then
     nr=$(wc -l < ${output}_leadingEdge_SNPs.txt)
@@ -99,6 +99,7 @@ if [ -f ${output}_leadingEdge_SNPs.txt ]; then
     fi
 else
     echo There are no significant genes and SNPs to extract | sed G
+    exit 1
 fi
 
 

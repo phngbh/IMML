@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 
-library(dplyr)
-library(RobustRankAggreg)
-library(fgsea)
-library(reactome.db)
+suppressMessages(library(dplyr))
+suppressMessages(library(RobustRankAggreg))
+suppressMessages(library(fgsea))
+suppressMessages(library(reactome.db))
 
 args = commandArgs(trailingOnly = TRUE)
 
@@ -19,7 +19,7 @@ for (i in 1:args[[3]]) {
     gene_stat$ADJP <- p.adjust(gene_stat$P, method = "fdr")
     gene_stat <- arrange(gene_stat, ADJP)
     sig_genes <- gene_stat$GENE[gene_stat$ADJP < 0.05]
-    sig_gene_list[[i]] <- sig_genes
+    sig_gene_list[[i]] <- as.character(sig_genes)
   } else {
     message("...File not found for iteration ", i, "\n")
   }
@@ -33,7 +33,6 @@ if (length(sig_gene_list) <= 3) {
   
 } else {
   set.seed(993)
-  print(sig_gene_list)
   gene_agg = aggregateRanks(glist = sig_gene_list)
   gene_agg$adjP = gene_agg$Score * length(sig_gene_list)
   gene_agg$adjP = p.adjust(gene_agg$adjP, method = "fdr")
@@ -48,7 +47,7 @@ if (length(sig_gene_list) <= 3) {
             paste0(args[[2]], "_significant_genes.rds"))
     cat("...Extract associated SNPs\n")
     gene_annot <-
-      read.table("gene_annot.txt") %>% dplyr::filter(V1 %in% aggregated_genes)
+      read.table(file.path(getwd(), "annotates", "gene_annot.txt")) %>% dplyr::filter(V1 %in% aggregated_genes)
     write.table(
       data.frame(V1 = unique(gene_annot$V2)),
       file.path(getwd(), paste0(

@@ -1,12 +1,38 @@
 #!/usr/bin/env Rscript
 
-library(dplyr, quietly = T)
-library(RobustRankAggreg, quietly = T)
-library(fgsea, quietly = T)
+suppressMessages(library(dplyr))
+suppressMessages(library(RobustRankAggreg))
+suppressMessages(library(fgsea))
 
 args = commandArgs(trailingOnly = TRUE)
 
 setwd(as.character(args[[2]]))
+
+read_file_to_named_list <- function(file_path) {
+  # Read the lines of the file
+  lines <- readLines(file_path)
+  
+  # Initialize an empty list to store the data
+  named_list <- list()
+  
+  # Loop through each line to process the data
+  for (line in lines) {
+    # Remove leading and trailing whitespace
+    line <- trimws(line)
+    
+    # Split the line by space to get the elements
+    elements <- strsplit(line, " ")[[1]]
+    
+    # The first element is the name, and the rest are the IDs
+    set_name <- elements[1]
+    ids <- elements[-1]
+    
+    # Add the IDs as character vector to the list with set name as the key
+    named_list[[set_name]] <- as.character(ids)
+  }
+  
+  return(named_list)
+}
 
 cat("Extract significant pathways\n")
 pwlist <- list()
@@ -57,7 +83,7 @@ if (length(toppw) > 0) {
     arrange(ZSTAT)
   ranklist <- gene_df$ZSTAT
   names(ranklist) <- gene_df$GENE
-  geneset <- readRDS(file.path(getwd(), "geneset.rds"))
+  geneset <- read_file_to_named_list(args[[4]])
   geneset <- geneset[toppw]
   set.seed(993)
   fgseaRes <- fgsea(
