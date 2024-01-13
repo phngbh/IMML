@@ -722,3 +722,41 @@ featureSelection_clinical <- function(
   return(list(selected_vars = var_sel, performance = perf_list, var_list = var_list))
   
 }
+
+genomics_create_samples <- function(
+    # creates input files for the genomics feature selection in the working directory
+  target = NULL, # dataframe of target variable
+  target_name = NULL, # string of target name (must be a column name in target dataframe)
+  n_resamplings = 100,
+  p = 0.8,
+  seed = 123
+){
+  # exclude missing values
+  target = drop_na(target)
+  
+  # making sample files
+  samples = createDataPartition(target[,target_name], times=n_resamplings, p=p)
+  dir.create('samples')
+  for (i in 1:n_resamplings) {
+    list = rownames(target_df[samples[[i]], target_name, drop=F])
+    write.table(data.frame(V1 = list, V2 = list),
+                file = file.path(getwd(), paste0("samples/samples_",i,".txt")),
+                col.names = F, row.names = F, quote = F, sep = "\t")
+  }
+  
+  # making phenotype file
+  if (all(sapply(target[target_name], function(x) x %in% c(0, 1)))){
+    target[target_name] = target[target_name] + 1
+  }
+  else if (all(sapply(target[target_name], function(x) x %in% c(0, 1)))){
+    # do nothing
+  }
+  else {
+    stop('Values enoding the target must be either 0 & 1, or 1 & 2!')
+  }
+  
+  phenotype_df = data.frame(rownames(target), rownames(target), target[target_name])
+  colnames(phenotype_df) = c('FID', 'IID', 'CKD')
+  phenotype_df = phenotype_df[order(phenotype_df[['CKD']], phenotype_df[['FID']]),]
+  write.table(phenotype_df, 'phenotype_file.txt', quote = F, row.names = F, sep = '\t')
+}
