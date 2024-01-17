@@ -17,6 +17,90 @@ library(RaMP)
 library(caret)
 library(limma)
 
+data_partitioning <-
+  function(phenotypeIDs,
+           dataIDs,
+           phenotype,
+           partitioning = 0.8,
+           numPartitions = 100,
+           k = 5,
+           iter = 100,
+           seed = 123) {
+    # Setting seed
+    set.seed(seed)
+    
+    # Defining variables
+    trainingIDs <- list()
+    trainSingleFeatureList <- list()
+    testSingleFeatureList <- list()
+    testFeatureList <- list()
+    trainFeatureList <- list()
+    finalList <- list()
+    
+    # List of feature selection modalities
+    listNames <- colnames(dataIDs)
+    
+    # Selecting IDs used for training and feature selection
+    IDs <-
+      phenotypeIDs %>%
+      dplyr::select(any_of(phenotype)) %>%
+      drop_na() %>%
+      rownames() %>%
+      as.double()
+    
+    # Save row names as a column
+    dataIDs <- dataIDs %>% tibble::rownames_to_column(var = "sampleID")
+    
+    # Data frame with the selected IDs
+    newSampleIDs <- dataIDs %>% filter(sampleID %in% IDs)
+    
+    # Building the model training IDs list
+    
+    # Selecting sample IDs with IDs for each modality
+    trainingSampleIDs <-
+      newSampleIDs %>% drop_na() %>% dplyr::select(sampleID)
+    
+    # Building a list with the modeltraining IDs
+    trainingIDs <- as.double(trainingSampleIDs$sampleID)
+    
+    iterations <-
+      caret::createDataPartition(trainingIDs, times = iter, p = partitioning)
+    
+    returnList <- list()
+    for (i in 1:iter) {
+      tmpFoldList <- list()
+      
+      testIDs <- trainingIDs[-iterations[[i]]]
+      trainIDs <- createFolds(trainingIDs[iterations[[i]]], k = k)
+      trainIDs <- lapply(trainIDs, function(x) trainingIDs[x])
+      
+      tmpFoldList[['Training']] <- trainIDs
+      tmpFoldList[['Testing']] <- testIDs
+      
+      returnList[[paste0('Iteration', i)]] <- tmpFoldList
+    }
+    # append to the final list
+    finalList <- c(finalList, "modelTraining" = list(returnList))
+    
+    # Remove the modeltraining IDs from the newSampleIDs
+    newSampleIDs <-
+      newSampleIDs %>% filter(!(sampleID %in% trainingIDs))
+    
+    fsList = list()
+    # Building a feature selection list for each modality
+    for (i in 1:length(listNames)) {
+      # Select one feature and remove all NA values from the newSampleIDs list
+      frame <-
+        newSampleIDs %>% dplyr::select(listNames[i]) %>% drop_na()
+      
+      fsVec = frame[[1]]
+      fsList[[listNames[i]]] = fsVec
+    }
+    finalList[['featureSelection']] = fsList
+    # Return the completed list
+    return(finalList)
+  }
+
 standardise = function(
     ###Scale datasets into standard distribution
   df = NULL #dataframe or matrix to be transformed
@@ -725,38 +809,26 @@ featureSelection_clinical <- function(
 
 genomics_create_samples <- function(
     # creates input files for the genomics feature selection in the working directory
-  target = NULL, # dataframe of target variable
-  target_name = NULL, # string of target name (must be a column name in target dataframe)
+  fam_file = NULL, # path to the .fam file
+  fs_samples = NULL, # a vector of samples for Genomics Feature Selection 
   n_resamplings = 100,
   p = 0.8,
   seed = 123
 ){
-  # exclude missing values
-  target = drop_na(target)
+  set.seed(seed)
+  
+  fam = read.csv(fam_file, sep = ' ')
+  fam = fam[fam[[2]] %in% fs_samples, ]
+  
   
   # making sample files
-  samples = createDataPartition(target[,target_name], times=n_resamplings, p=p)
+  samples = createDataPartition(fam[[2]], times=n_resamplings, p=p)
   dir.create('samples')
   for (i in 1:n_resamplings) {
-    list = rownames(target_df[samples[[i]], target_name, drop=F])
-    write.table(data.frame(V1 = list, V2 = list),
+    fid = fam[samples[[i]], ][[1]]
+    iid = test[samples[[i]], ][[1]]
+    write.table(data.frame(V1 = fid, V2 = iid),
                 file = file.path(getwd(), paste0("samples/samples_",i,".txt")),
                 col.names = F, row.names = F, quote = F, sep = "\t")
   }
-  
-  # making phenotype file
-  if (all(sapply(target[target_name], function(x) x %in% c(0, 1)))){
-    target[target_name] = target[target_name] + 1
-  }
-  else if (all(sapply(target[target_name], function(x) x %in% c(0, 1)))){
-    # do nothing
-  }
-  else {
-    stop('Values enoding the target must be either 0 & 1, or 1 & 2!')
-  }
-  
-  phenotype_df = data.frame(rownames(target), rownames(target), target[target_name])
-  colnames(phenotype_df) = c('FID', 'IID', 'CKD')
-  phenotype_df = phenotype_df[order(phenotype_df[['CKD']], phenotype_df[['FID']]),]
-  write.table(phenotype_df, 'phenotype_file.txt', quote = F, row.names = F, sep = '\t')
 }
