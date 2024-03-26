@@ -14,8 +14,8 @@ n_iter=$8
 cd ${wdir}
 
 dirlist=(subsets annotates magma_gene magma_geneset)
-#for dir in  ${dirlist[@]}
-#do
+# for dir in  ${dirlist[@]}
+# do
 #    if [[ -d ${dir} ]]
 #    then
 #        echo "Folder ${dir} exists, making new folder..."
@@ -25,28 +25,28 @@ dirlist=(subsets annotates magma_gene magma_geneset)
 #        echo Making ${dir}
 #        mkdir ${dir}
 #    fi
-#done
-#
-#echo Annotating SNPs to genes...  | sed G
-#
-#magma --annotate window=2,0.5 --snp-loc ${bfile}.bim --gene-loc ${geneloc} --out ./annotates/annotates
-#
-#echo Starting geneset analysis | sed G
-#
-#for ((i=1; i<=${n_iter}; i++))
-#do
-#	###Removing training samples
-#	plink --silent --bfile ${bfile} --keep ${sample_dir}/samples_${i}.txt --make-bed --out ./subsets/${output}_${i}
-#
-#	echo Running gene-level analysis... | sed G
+# done
+# 
+# echo Annotating SNPs to genes...  | sed G
+# 
+# magma --annotate window=2,0.5 --snp-loc ${bfile}.bim --gene-loc ${geneloc} --out ./annotates/annotates
+# 
+# echo Starting geneset analysis | sed G
+# 
+# for ((i=1; i<=${n_iter}; i++))
+# do
+# ###Removing training samples
+# plink --silent --bfile ${bfile} --keep ${sample_dir}/samples_${i}.txt --make-bed --out ./subsets/${output}_${i}
+# 
+# echo Running gene-level analysis... | sed G
 #  # Gene-level analysis for 1 bootstrapped subset
-#	magma --bfile ./subsets/${output}_${i} --gene-annot ./annotates/annotates.genes.annot --pheno file=${phenofile} --out ./magma_gene/${output}_${i}
-#
-#	echo Running gene set-level analysis... | sed G
+# magma --bfile ./subsets/${output}_${i} --gene-annot ./annotates/annotates.genes.annot --pheno file=${phenofile} --out ./magma_gene/${output}_${i}
+# 
+# echo Running gene set-level analysis... | sed G
 #  # Gene-set level analysis for 1 bootstrapped subset
-#	magma --gene-results ./magma_gene/${output}_${i}.genes.raw --model alpha=0.3 --settings gene-info --set-annot ${genesetfile} --#out ./magma_geneset/${output}_${i}
-#
-#done
+# magma --gene-results ./magma_gene/${output}_${i}.genes.raw --model alpha=0.3 --settings gene-info --set-annot ${genesetfile} --out ./magma_geneset/${output}_${i}
+# 
+# done
 
 
 echo Extract SNPs associated to significant genes in gene-level analysis | sed G

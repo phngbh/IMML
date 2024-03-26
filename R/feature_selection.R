@@ -1,12 +1,8 @@
 library(tibble)
 library(tidyverse)
 library(xtable)
-library(cowplot)
 library(stringr)
 library(scales)
-library(ggrepel)
-library(ggpubr)
-library(RColorBrewer)
 library(devtools)
 library(reactome.db)
 library(fgsea)
@@ -262,7 +258,7 @@ featureSelection_untargeted <- function(
       message("Number of samples is less than 100 so please consider setting lower number of resamples or do not use resampling at all.\n")
     }
     # Initiate result list
-    res <- list(auc_gsea = list(), auc_de = list(), auc_union = list(), pathway = list(), gsea_probe = list(), gsea_probe_rra = list(), d_probe = list(), d_probe_rra = list())
+    res <- list(auc_gsea = list(), auc_de = list(), auc_union = list(), pathway = list(), gsea_probe = list(), gsea_probe_rra = list(), d_probe = list(), d_probe_rra = list(), resampling = T)
     
     # Make resamples for feature selection
     set.seed(seed)
@@ -417,7 +413,7 @@ featureSelection_untargeted <- function(
     
   } else {
     cat("Resampling approach is not set => Do feature selection on whole feature selection set\n")
-    res <- list(pathway = list(), gsea_probe = list(),  d_probe = list())
+    res <- list(pathway = list(), gsea_probe = list(),  d_probe = list(), resampling = F)
     
     cat("DE analysis\n")
     fit = lmFit(data, modmatrix)
@@ -482,7 +478,7 @@ featureSelection_targeted <- function(
     }
     
     # Initiate result list
-    res <- list(auc_msea = list(), auc_de = list(), auc_union = list(), pathway = list(), msea_m = list(), msea_m_rra = list(), d_m = list(), d_m_rra = list())
+    res <- list(auc_msea = list(), auc_de = list(), auc_union = list(), pathway = list(), msea_m = list(), msea_m_rra = list(), d_m = list(), d_m_rra = list(), resampling = T)
     
     # Make resamples of feature selection set
     set.seed(seed)
@@ -666,6 +662,7 @@ featureSelection_targeted <- function(
     sig_m <- pathway_list[sig_mset] %>% unlist() %>% unique() 
     cat(paste0("......There are ",length(sig_m)," unique probes within the pathways\n"))
     res[["msea_m"]] <- sig_m
+    res[["resampling"]] = F
     
     return(res)
   }
@@ -823,12 +820,36 @@ genomics_create_samples <- function(
   
   # making sample files
   samples = createDataPartition(fam[[2]], times=n_resamplings, p=p)
-  dir.create('samples')
+  dir.create('genomics_samples')
   for (i in 1:n_resamplings) {
     fid = fam[samples[[i]], ][[1]]
-    iid = test[samples[[i]], ][[1]]
+    iid = fam[samples[[i]], ][[2]]
     write.table(data.frame(V1 = fid, V2 = iid),
-                file = file.path(getwd(), paste0("samples/samples_",i,".txt")),
+                file = file.path(getwd(), paste0("genomics_samples/samples_",i,".txt")),
                 col.names = F, row.names = F, quote = F, sep = "\t")
+  }
+  fid = fam[[1]]
+  iid = fam[[2]]
+  write.table(data.frame(V1 = fid, V2 = iid),
+              file = file.path(getwd(), "genomics_samples/samples_fs.txt"),
+              col.names = F, row.names = F, quote = F, sep = "\t")
+}
+
+methylomics_create_samples <- function(
+    # creates input files for the methylomics feature selection in the working directory
+  fs_samples = NULL, # a vector of samples for Methylomics Feature Selection 
+  n_resamplings = 100,
+  p = 0.8,
+  seed = 123
+){
+  set.seed(seed)
+  
+  # making sample files
+  samples = createDataPartition(fs_samples, times=n_resamplings, p=p)
+  dir.create('methylomics_samples')
+  saveRDS(fs_samples, file=file.path(getwd(), "methylomics_samples/samples_fs.rds"
+  ))
+  for (i in 1:n_resamplings) {
+    saveRDS(fs_samples[samples[[i]]], file=file.path(getwd(), paste0("methylomics_samples/samples_", i, ".rds")))
   }
 }
