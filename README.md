@@ -52,5 +52,11 @@ The `phenotypes.rds` file needs to be a data frame with samples as rows and colu
 ### Modeltraining
 The model incorporates multi-view learning. A critical assumption of multi-view learning, however, is that the single-view models should be independent. This assumption is often violated in complex metabolic diseases, as there is a high level of redundancy and correlations amongst feature layers. Nevertheless, multi-view learning has proven to be superior compared to models leveraging concatenated feature space in crowd-sourced computational challenges. 
 
+## Reference
+
+This framework is based on the analysis presented in the following manuscript in preprint: https://doi.org/10.1101/2024.01.04.574164
+
+Phong BH Nguyen _et al_. The Interpretable Multimodal Machine Learning (IMML) framework reveals pathological signatures of distal sensorimotor polyneuropathy. bioRxiv 2024.01.04.574164.
+
 #### Authors
 Ulrich Asemann & Wilhelm Glaas
