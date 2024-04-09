@@ -28,25 +28,6 @@ suppressMessages(library(methylGSA))
 suppressMessages(library(RobustRankAggreg))
 suppressMessages(library(org.Hs.eg.db))
 
-## Load technical variables
-#loadRData <- function(fileName){
-#  #loads an RData file, and returns it
-#  load(fileName)
-#  get(ls()[ls() != "fileName"])
-#}
-##mvalue = readRDS("mvalue.rds")
-#batch = loadRData("./Technical_variables/KF4_PlateChip_1727.RData")
-#pcs = loadRData("./Technical_variables/control_probe_pcs_n1727.RData")
-#pcs.df = as.data.frame(pcs[,1:20]) %>% mutate(ID = rownames(.))
-#batch$ZZ_nr = as.character(batch$ZZ_nr)
-#batch.pcs = inner_join(batch, pcs.df, by = c("ZZ_nr" = "ID"))
-#cell.type = read.csv("./Houseman/KF4_QN_BMIQ_estimated_cell_distribution_meanimpute473_lessThanOneFALSE.csv", sep = ";")
-#cell.type$ZZ_nr = as.character(cell.type$ZZ_nr)
-#info = left_join(batch.pcs, cell.type) %>% column_to_rownames("ZZ_nr")
-#info$Chip = as.factor(info$Chip)
-#info$Batch = as.factor(info$Batch)
-#info = rownames_to_column(info, "Sample_Name")
-
 set.seed(993)
 
 cat("Load necessary files and prepare for statistical analysis\n")
