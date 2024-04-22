@@ -63,6 +63,7 @@ if (length(pwlist) > 3) {
   toppw = filter(pwlist_agg, adjP < 0.05)$Name %>% as.character()
 } else {
   cat("There are less than three significant pathways to aggregate\n")
+  toppw = NULL
 }
 
 if (length(toppw) > 0) {

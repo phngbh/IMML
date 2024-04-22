@@ -5,7 +5,8 @@
 
 cat("Load functions and environment\n")
 # for now only run from R folder of package
-source("model_training.R")
+path = funr::get_script_path()
+source(file.path(path, "model_training.R"))
 
 cat("Get the argument settings\n")
 opt <- get_args()
@@ -20,6 +21,8 @@ outdir <- opt$outdir
 
 setwd(wdir)
 
+#!!!!!!!!!!!!!!!!!!!!!!!
+# make this flexible !!!
 tmp_dict <- list(Methylomics = "meth", Transcriptomics = "tra", Proteomics = "pro", Metabolomics = "metab", Clinical = "cli")
 
 cat("Load preprocessed data and necessary files\n")
