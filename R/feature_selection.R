@@ -1,10 +1,12 @@
 suppressMessages(library(tibble))
-suppressMessages(library(tidyverse))
+#suppressMessages(library(tidyverse))
+suppressMessages(library(tidyr))
+suppressMessages(library(dplyr))
 suppressMessages(library(xtable))
 suppressMessages(library(stringr))
 suppressMessages(library(scales))
 suppressMessages(library(devtools))
-suppressMessages(library(reactome.db))
+#suppressMessages(library(reactome.db))
 suppressMessages(library(fgsea))
 suppressMessages(library(pROC))
 suppressMessages(library(RobustRankAggreg))
@@ -111,10 +113,7 @@ get_pathways <- function(
     # Get all pathways in RaMP database that are associated with the analytes of interest
   # Output: A list of pathways and their member analytes (with local dataset IDs)
   database_id = NULL, # character vector of database IDs of the analytes, in form '<database>:<id>', eg: kegg:xxxxx, entrez:xxxxx, uniprot:xxxx...
-  local_id = NULL, # character vector of the same length as database_id providing corresponding local data ID of the respective analytes
-  mysql_username = NULL, # username to connect to local MySQL data files. Please see https://github.com/ncats/RaMP-DB for details
-  mysql_password = NULL, # password to connect to local MySQL data files. Please see https://github.com/ncats/RaMP-DB for details
-  dbname = NULL # name of local RaMP mySQL pathway data file. Please see https://github.com/ncats/RaMP-DB for details
+  local_id = NULL # character vector of the same length as database_id providing corresponding local data ID of the respective analytes
 ){
   # Quick check
   if(length(database_id) != length(local_id)){
@@ -122,8 +121,8 @@ get_pathways <- function(
   }
   
   # Set up your connection to the RaMP2.0 database:
-  pkg.globals <<- setConnectionToRaMP(dbname= dbname, username=mysql_username, conpass=mysql_password, host = "localhost")
-  pathwaydf <- getPathwayFromAnalyte(database_id) %>% unite(col = "pathwayName", pathwaySource, pathwayName, sep = ":")
+  ramp <- RaMP()
+  pathwaydf <- getPathwayFromAnalyte(ramp, analytes = database_id) %>% unite(col = "pathwayName", pathwaySource, pathwayName, sep = ":")
   pathwaylist <- list()
   for (i in unique(pathwaydf$pathwayName)){
     .df <- filter(pathwaydf, pathwayName == i)
