@@ -676,7 +676,8 @@ featureSelection_clinical <- function(
   to_remove = NULL, # character vector of variables to be removed from analysis (usually ones that were used to compute the target)
   seed = 993, # random seed
   resampling = TRUE, # Whether should do the analysis in many resamples
-  n_iterations = 100 # number of resamples (if resampling == TRUE)
+  n_iterations = 100, # number of resamples (if resampling == TRUE)
+  p = 0.8
 ){
   
   # Make sure the dimensions are correct
@@ -695,7 +696,7 @@ featureSelection_clinical <- function(
   
   cat("Prepare resamples\n")
   target[,target_name] <- ifelse(target[,target_name] == 1, "One", "Zero") %>% factor(levels = c("One","Zero"))
-  resamples <- createDataPartition(y = target[,target_name], times = n_iterations, p = 0.8)
+  resamples <- createDataPartition(y = target[,target_name], times = n_iterations, p = p)
   
   cat("Set up training parameters\n")
   LogLoss <- function(pred, true, eps = 1e-15, weights = NULL) {

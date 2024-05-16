@@ -16,6 +16,7 @@ get_args <- function(
     make_option(c("--seed"), type="integer", default=993, help="random seed"),
     make_option(c("--resampling"), type="logical", default=TRUE, help="Whether should do the analysis in many resamples"),
     make_option(c("--n_iterations"), type="integer", default=100, help="number of resamples (if resampling == TRUE)"),
+    make_option(c("--p"), type="double", default=0.8, help="percentage used for resampling"),
     make_option(c("--partitioning"), type="character", default=NULL, help="path to data partitioning file"),
     make_option(c("--out_dir"), type="character", default=NULL, help="path to output directory"))
   
