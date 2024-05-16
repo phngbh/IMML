@@ -3,7 +3,7 @@
 suppressMessages(library(dplyr))
 suppressMessages(library(RobustRankAggreg))
 suppressMessages(library(fgsea))
-suppressMessages(library(reactome.db))
+#suppressMessages(library(reactome.db))
 
 args = commandArgs(trailingOnly = TRUE)
 
