@@ -20,7 +20,6 @@ data_partitioning <-
            dataIDs,
            phenotype,
            partitioning = 0.8,
-           numPartitions = 100,
            k = 5,
            iter = 100,
            seed = 123) {

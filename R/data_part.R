@@ -16,7 +16,6 @@ get_args <- function(
     make_option(c("--k"), type="integer", default=5, help="k for k-fold CV"),
     make_option(c("--n_iterations"), type="integer", default=100, help="number of resamples for model training"),
     make_option(c("--percent"), type="double", default=0.8, help="percentage of training data for feature selection"),
-    make_option(c("--n_partitions"), type="integer", default=100, help="number of resamples for feature selection"),
     make_option(c("--out_dir"), type="character", default=NULL, help="path to output directory"))
   
   # Parse the command line options
@@ -33,7 +32,6 @@ modals_ids = readRDS(opt$modals_ids)
 part = data_partitioning(phenotypeIDs = target, dataIDs = modals_ids,
                          phenotype = opt$target_name,
                          partitioning = opt$percent,
-                         numPartitions = opt$n_paritions,
                          k = opt$k,
                          iter = opt$n_iterations,
                          seed = opt$seed)
