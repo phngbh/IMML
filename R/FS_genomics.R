@@ -34,7 +34,7 @@ partitioning = readRDS(opt$partitioning)
 setwd(opt$out_dir)
 dir.create('Genomics')
 setwd('Genomics')
-genomics_create_samples(fam_file = opt$fam_file ,fs_samples = partitioning$featureSelection$Genomics,
+genomics_create_samples(fam_file = paste0(opt$file_prefix, '.fam') ,fs_samples = partitioning$featureSelection$Genomics,
                            n_resamplings = opt$n_iterations, p = opt$p,
                            seed = opt$seed)
 
@@ -45,7 +45,7 @@ modals_ids = rownames_to_column(modals_ids, var = 'ID')
 targets = readRDS(opt$target)
 targets = rownames_to_column(targets, var = 'ID')
 # create phenotype file
-fam = read.csv(opt$fam_file, sep = ' ')
+fam = read.csv(paste0(opt$file_prefix, '.fam'), sep = ' ')
 fam = fam[, c(1,2)]
 colnames(fam) = c('FID', 'IID')
 merged = merge(modals_ids, targets)
