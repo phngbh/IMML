@@ -18,6 +18,7 @@ get_args <- function(
     make_option(c("--anno"), type="character", default=NULL, help="path to a dataframe of feature annotations"),
     make_option(c("--resampling"), type="logical", default=TRUE, help="Whether should do the analysis in many resamples"),
     make_option(c("--n_iterations"), type="integer", default=100, help="number of resamples (if resampling == TRUE)"),
+    make_option(c("--p"), type="double", default=0.8, help="percentage used for resampling"),
     make_option(c("--partitioning"), type="character", default=NULL, help="path to data partitioning file"),
     make_option(c("--msea_fdr"), type="double", default=0.2, help="FDR threshold for MSEA"),
     make_option(c("--out_dir"), type="character", default=NULL, help="path to output directory"))
@@ -61,6 +62,7 @@ result = featureSelection_targeted(data = data,
                                      seed = opt$seed,
                                      resampling = opt$resampling,
                                      n_iterations = opt$n_iterations,
+                                     p = opt$p,
                                      MSEA_FDR = opt$msea_fdr)
 
 saveRDS(result, file = file.path(opt$out_dir, paste0('selectionRes_', opt$mod_name, '_', opt$target_name, '.rds')))

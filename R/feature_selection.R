@@ -232,6 +232,7 @@ featureSelection_untargeted <- function(
   seed = 993, # random seed
   resampling = TRUE, # Whether should do the analysis in many resamples
   n_iterations = 100, # number of resamples (if resampling == TRUE)
+  p = 0.8,
   GSEA_FDR = 0.2
 ){
   
@@ -260,7 +261,7 @@ featureSelection_untargeted <- function(
     
     # Make resamples for feature selection
     set.seed(seed)
-    resamples <- createDataPartition(y = target[,target_name], times = n_iterations, p = 0.8)
+    resamples <- createDataPartition(y = target[,target_name], times = n_iterations, p = p)
     for (i in 1:length(resamples)){
       cat("Iter ",i,"\n")
       data_tmp <- data[,resamples[[i]]]
@@ -452,6 +453,7 @@ featureSelection_targeted <- function(
   seed = 993, # random seed
   resampling = TRUE, # Whether should do the analysis in many resamples
   n_iterations = 100, # number of resamples (if resampling == TRUE)
+  p = 0.8,
   MSEA_FDR = 0.2 # FDR cut off for MSEA in each resample
 ){
   
@@ -480,7 +482,7 @@ featureSelection_targeted <- function(
     
     # Make resamples of feature selection set
     set.seed(seed)
-    resamples <- createDataPartition(y = target[,target_name], times = n_iterations, p = 0.8)
+    resamples <- createDataPartition(y = target[,target_name], times = n_iterations, p = p)
     
     for (i in 1:length(resamples)){
       cat("Iter ",i,"\n")
