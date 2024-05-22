@@ -14,6 +14,7 @@ get_args <- function(
     make_option(c("--modals_ids"), type="character", default=NULL, help="path to a dataframe of modality IDs"),
     make_option(c("--target_name"), type="character", default=NULL, help="string of target name (must be a column name in target dataframe)"),
     make_option(c("--mod_name"), type="character", default=NULL, help="string of modality name (must be a column name in modals_ids dataframe)"),
+    make_option(c("--pathways"), type="character", default=NULL, help="path to a list of pathways"),
     make_option(c("--seed"), type="integer", default=993, help="random seed"),
     make_option(c("--anno"), type="character", default=NULL, help="path to a dataframe of feature annotations"),
     make_option(c("--resampling"), type="logical", default=TRUE, help="Whether should do the analysis in many resamples"),
@@ -29,12 +30,15 @@ get_args <- function(
   return(opt)
 }
 
-opt <- get_args()
+opt = get_args()
 
-anno = readRDS(opt$anno)
-
-pathways = get_pathways(database_id = anno[[2]],
-                        local_id = anno[[1]])
+if (is.null(opt$pathways)){
+  anno = readRDS(opt$anno)
+  pathways = get_pathways(database_id = anno[[2]],
+                          local_id = anno[[1]])
+} else {
+  pathways = readRDS(opt$pathways)
+}
 
 partitioning = readRDS(opt$partitioning)
 
@@ -62,7 +66,7 @@ result = featureSelection_targeted(data = data,
                                      seed = opt$seed,
                                      resampling = opt$resampling,
                                      n_iterations = opt$n_iterations,
-                                     p = opt$p,
+                                     train_split = opt$p,
                                      MSEA_FDR = opt$msea_fdr)
 
 saveRDS(result, file = file.path(opt$out_dir, paste0('selectionRes_', opt$mod_name, '_', opt$target_name, '.rds')))
