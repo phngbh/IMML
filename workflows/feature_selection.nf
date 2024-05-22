@@ -1,6 +1,6 @@
 
 process data_partition {
-    conda '/home/willy/miniconda3/envs/IMML/'
+conda '/home/willy/miniconda3/envs/IMML/'
     input:
     tuple val(target), val(modals_ids), val(target_name), val(out_dir), val(seed), val(k), val(n_iter), val(p), val(package_path)
     output:
@@ -13,7 +13,7 @@ process data_partition {
 }
 
 process feature_selection {
-    conda '/home/willy/miniconda3/envs/IMML/'
+conda '/home/willy/miniconda3/envs/IMML/'
     input:
     val config
     val target
@@ -39,11 +39,11 @@ process feature_selection {
         """
     else if(config.modality == 'targeted')
         """
-        Rscript ${package_path}R/FS_targeted.R --data ${config.data} --target ${target} --modals_ids ${modals_ids} --target_name ${target_name} --out_dir ${out_dir} --seed ${seed} --n_iterations ${config.n_iterations} --p ${config.train_split} --resampling ${config.resampling} --partitioning ${out_dir}data_partition_${target_name}.rds --anno ${config.annotation} --msea_fdr ${config.msea_fdr} --mod_name ${config.name}
+        Rscript ${package_path}R/FS_targeted.R --data ${config.data} --target ${target} --modals_ids ${modals_ids} --target_name ${target_name} --out_dir ${out_dir} --seed ${seed} --n_iterations ${config.n_iterations} --p ${config.train_split} --resampling ${config.resampling} --partitioning ${out_dir}data_partition_${target_name}.rds --pathways ${config.pathways} --msea_fdr ${config.msea_fdr} --mod_name ${config.name}
         """
     else if(config.modality == 'untargeted')
         """
-        Rscript ${package_path}R/FS_untargeted.R --data ${config.data} --target ${target} --modals_ids ${modals_ids} --target_name ${target_name} --out_dir ${out_dir} --seed ${seed} --n_iterations ${config.n_iterations} --p ${config.train_split} --resampling ${config.resampling} --partitioning ${out_dir}data_partition_${target_name}.rds --anno ${config.annotation} --gsea_fdr ${config.gsea_fdr} --mod_name ${config.name}
+        Rscript ${package_path}R/FS_untargeted.R --data ${config.data} --target ${target} --modals_ids ${modals_ids} --target_name ${target_name} --out_dir ${out_dir} --seed ${seed} --n_iterations ${config.n_iterations} --p ${config.train_split} --resampling ${config.resampling} --partitioning ${out_dir}data_partition_${target_name}.rds --pathways ${config.pathways} --gsea_fdr ${config.gsea_fdr} --mod_name ${config.name}
         """
     else
         error "Invalid modality name: ${config.modality}"
