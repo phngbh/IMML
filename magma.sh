@@ -108,5 +108,5 @@ cat ${output}_associated_LDprunned_SNPs.txt ${output}_leadingEdge_LDprunned_SNPs
 
 cd ..
 # Make final bed file
-plink --silent -bfile ${bfile} --extract ./Genomics/final_SNPs.txt --make-bed --out ${output}_genomics_selected
+plink --silent -bfile ${bfile} --extract ./Genomics/final_SNPs.txt --make-bed --out selectionRes_Genomics_${output}
 

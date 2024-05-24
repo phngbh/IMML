@@ -181,5 +181,5 @@ tmp_probes_agg$adjP = p.adjust(tmp_probes_agg$adjP, method = "fdr")
 aggregated_probes = rownames(filter(tmp_probes_agg, adjP < 0.05))
 
 selectionRes_meth <- list(d_probe_rra = aggregated_probes, gsea_probe_rra = tmp_associated_probes, resampling = T)
-saveRDS(selectionRes_meth, file.path(args[[10]], paste0("selectionRes_methyl_", args[[9]],".rds")))
+saveRDS(selectionRes_meth, file.path(args[[10]], paste0("selectionRes_Methylomics_", args[[9]],".rds")))
 
