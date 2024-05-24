@@ -3,6 +3,9 @@
 # libs <- c("Rlib", .libPaths())
 # .libPaths(libs)
 
+suppressMessages(library(funr))
+suppressMessages(library(yaml))
+
 cat("Load functions and environment\n")
 # for now only run from R folder of package
 path = funr::get_script_path()
@@ -12,40 +15,63 @@ cat("Get the argument settings\n")
 opt <- get_args()
 wdir <- opt$wdir
 iter <- opt$iter
-outcome_name <- opt$outcome
 integration <- opt$integration
 algorithm <- opt$algorithm
 p_metric <- opt$p_metric
 features <- opt$feature
 outdir <- opt$outdir
+config_path <- opt$config
 
 setwd(wdir)
+if(!dir.exists("model_results")){ dir.create("model_results") }
 
-#!!!!!!!!!!!!!!!!!!!!!!!
-# make this flexible !!!
-tmp_dict <- list(Methylomics = "meth", Transcriptomics = "tra", Proteomics = "pro", Metabolomics = "metab", Clinical = "cli")
+config = read_yaml(config_path)
+fs_config = config$feature_selection
 
 cat("Load preprocessed data and necessary files\n")
-targets <- readRDS("targets.rds")
+targets <- readRDS(config$targets)
 targets = rownames_to_column(targets, var = 'SampleID')
-modals_ids <- readRDS("modals_ids.rds")
+modals_ids <- readRDS(config$modals_ids)
 modals_ids = rownames_to_column(modals_ids, var = 'SampleID')
+outcome_name <- config$target_name
 preprocessed_data <- list()
-for (i in names(tmp_dict)){
-  if (file.exists(paste0("processed_",tmp_dict[[i]],"_",outcome_name,".rds"))){
-    preprocessed_data[[i]] <- readRDS(paste0("processed_",tmp_dict[[i]],"_",outcome_name,".rds"))
-    if (!i %in% c("Olink", "Clinical")){
-      preprocessed_data[[i]] <- t(preprocessed_data[[i]])
-    }
+
+for (i in 1:length(fs_config)) {
+  modality = fs_config[[i]]
+  if (modality$modality == 'Clinical'){
+    preprocessed_data[[modality$modality]] = readRDS(modality$data)
+  }
+  else if (modality$modality == 'Genomics') {
+    next
+  }
+  else if (modality$modality %in% c('untargeted', 'targeted')){
+    preprocessed_data[[modality$name]] = t(readRDS(modality$data))
+  }
+  else if (modality$modality == 'Methylomics'){
+    preprocessed_data[[modality$modality]] = t(readRDS(modality$data))
+  }
+  else {
+    stop("Error: unknown modality!")
   }
 }
-cat("...There are ",length(preprocessed_data), " modality loaded\n")
+
+# for (i in names(tmp_dict)){
+#   if (file.exists(paste0("processed_",tmp_dict[[i]],"_",outcome_name,".rds"))){
+#     preprocessed_data[[i]] <- readRDS(paste0("processed_",tmp_dict[[i]],"_",outcome_name,".rds"))
+#     if (!i %in% c("Olink", "Clinical")){
+#       preprocessed_data[[i]] <- t(preprocessed_data[[i]])
+#     }
+#   }
+# }
+
+cat("...There are ",length(preprocessed_data), " modalities loaded\n")
 
 cat("Load feature selection results\n")
 selection_result <- list()
-for (i in names(tmp_dict)){
-  if (file.exists(paste0("selectionRes_",tmp_dict[[i]],"_",outcome_name,".rds"))){
-    selection_result[[i]] <- readRDS(paste0("selectionRes_",tmp_dict[[i]],"_",outcome_name,".rds"))
+mod_names = names(preprocessed_data)
+for (name in mod_names){
+  if (file.exists(paste0("selectionRes_",name,"_",outcome_name,".rds"))){
+    selection_result[[name]] <- readRDS(paste0("selectionRes_",name,"_",outcome_name,".rds"))
   }
 }
 cat("...There are ",length(selection_result), " modality loaded\n")
@@ -63,7 +89,7 @@ rm(preprocessed_data)
 rm(selection_result)
 gc()
 cat("...Add genomics data to selected data list\n")
-if (file.exists(paste0(outcome_name,"_genomics_selected.bed"))){
+if (file.exists(paste0("selectionRes_", outcome_name,".bed"))){
   selected_data$Genomics <- bed_to_df(paste0(outcome_name,"_genomics_selected.bed"))
 } else {
   cat("......There is no selected genomics data\n")
@@ -75,7 +101,8 @@ names(outcome) <- targets$SampleID
 outcome <- na.omit(outcome)
 cat("There are ", length(outcome), " samples with outcome information in total\n")
 input_data <- make_input_list(data_list = selected_data, outcome = outcome, id_table = modals_ids)
-saveRDS(input_data,paste0(outcome_name,"_input_data.rds"))
+# check if shouldn't be overwritten
+saveRDS(input_data,file.path("model_results", paste0(outcome_name,"_input_data.rds")))
 
 cat("Make cross validation list\n")
 outcome <- outcome[rownames(input_data[[1]])]
@@ -85,17 +112,17 @@ cat("Train and evaluate models\n")
 outcome <- ifelse(outcome == 1, "One", "Zero") %>% factor(levels = c("One","Zero"))
 if (integration == "FFS"){
   res <- fit_forwardSelect(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path(outdir, paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
   res <- fit_forwardSelectFromClinical(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path(outdir, paste0(paste(outcome_name,integration,algorithm,p_metric,features,"fromClinical",iter,sep = "_"),".rds")))
+  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,"fromClinical",iter,sep = "_"),".rds")))
 } else if (integration == "ensemble") {
   res <- fit_ensemble(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path(outdir, paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
 } else {
   res <- fit_forwardSelect(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path(outdir, paste0(paste(outcome_name,"FFS",algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"FFS",algorithm,p_metric,features,iter,sep = "_"),".rds")))
   res <- fit_forwardSelectFromClinical(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path(outdir, paste0(paste(outcome_name,"FFS",algorithm,p_metric,features,"fromClinical",iter,sep = "_"),".rds")))
+  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"FFS",algorithm,p_metric,features,"fromClinical",iter,sep = "_"),".rds")))
   res <- fit_ensemble(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path(outdir, paste0(paste(outcome_name,"ensemble",algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"ensemble",algorithm,p_metric,features,iter,sep = "_"),".rds")))
 }
