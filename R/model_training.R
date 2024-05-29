@@ -1,5 +1,7 @@
 #remotes::install_github("cran/DMwR")
-suppressMessages(library(tidyverse))
+suppressMessages(library(tidyr))
+suppressMessages(library(dplyr))
+suppressMessages(library(tibble))
 suppressMessages(library(snpStats))
 suppressMessages(library(caret))
 suppressMessages(library(caretEnsemble))

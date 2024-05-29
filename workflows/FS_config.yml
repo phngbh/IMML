@@ -1,5 +1,4 @@
 package_path: /your/path/IMML/
-conda_env: /your/path/envs/IMML/
 targets: /your/path/targets.rds
 target_name: your_name
 modals_ids: /your/path/modals_ids.rds

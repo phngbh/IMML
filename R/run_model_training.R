@@ -7,26 +7,24 @@ suppressMessages(library(funr))
 suppressMessages(library(yaml))
 
 cat("Load functions and environment\n")
-# for now only run from R folder of package
 path = funr::get_script_path()
 source(file.path(path, "model_training.R"))
 
 cat("Get the argument settings\n")
 opt <- get_args()
-wdir <- opt$wdir
 iter <- opt$iter
 integration <- opt$integration
 algorithm <- opt$algorithm
 p_metric <- opt$p_metric
 features <- opt$feature
-outdir <- opt$outdir
 config_path <- opt$config
-
-setwd(wdir)
-if(!dir.exists("model_results")){ dir.create("model_results") }
 
 config = read_yaml(config_path)
 fs_config = config$feature_selection
+wdir = config$out_dir
+
+setwd(wdir)
+if(!dir.exists("model_results")){ dir.create("model_results") }
 
 cat("Load preprocessed data and necessary files\n")
 targets <- readRDS(config$targets)
@@ -89,8 +87,8 @@ rm(preprocessed_data)
 rm(selection_result)
 gc()
 cat("...Add genomics data to selected data list\n")
-if (file.exists(paste0("selectionRes_", outcome_name,".bed"))){
-  selected_data$Genomics <- bed_to_df(paste0(outcome_name,"_genomics_selected.bed"))
+if (file.exists(paste0("selectionRes_Genomics_", outcome_name,".bed"))){
+  selected_data$Genomics <- bed_to_df(paste0("selectionRes_Genomics_", outcome_name,".bed"))
 } else {
   cat("......There is no selected genomics data\n")
 }

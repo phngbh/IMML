@@ -1,6 +1,5 @@
 
 process data_partition {
-conda '/home/willy/miniconda3/envs/IMML/'
     input:
     tuple val(target), val(modals_ids), val(target_name), val(out_dir), val(seed), val(k), val(n_iter), val(p), val(package_path)
     output:
@@ -13,7 +12,6 @@ conda '/home/willy/miniconda3/envs/IMML/'
 }
 
 process feature_selection {
-conda '/home/willy/miniconda3/envs/IMML/'
     input:
     val config
     val target

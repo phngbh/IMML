@@ -1,0 +1,8 @@
+package_path: /your/path/IMML/
+fs_config_file: /your/path/FS_config.yml
+
+n_iterations: 10
+integration: FFS
+algorithm: glmnet
+p_metric: AUPRC
+feature: GSEA
