@@ -26,7 +26,7 @@ get_args <- function(
     make_option(c("--wdir"), type="character", default=NULL, help="Working directory"),
     make_option(c("--iter"), type="numeric", default=NULL, help="Resample/iteration"),
     make_option(c("--outcome"), type="character", default=NULL, help="Name of the outcome variable"),
-    make_option(c("--integration"), type="character", default="FFS", help="Type of modality integration during model training ('FFS', 'ensemble' or 'both')"),
+    make_option(c("--integration"), type="character", default="FFS", help="Type of modality integration during model training ('FFS' or 'ensemble')"),
     make_option(c("--algorithm"), type="character", default="glmnet", help="Machine learning algorithm"),
     make_option(c("--p_metric"), type="character", default="AUPRC", help="Performance metrics"),
     make_option(c("--feature"), type="character", default="union", help="Type of features used for training ('GSEA', 'thresholding' or 'union')"),
