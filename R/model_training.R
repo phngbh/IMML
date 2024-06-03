@@ -444,7 +444,7 @@ fit_forwardSelect <- function(
     
     best_d <- comb_list_fil[[best_ind]]
     cat("...The best ",j, "-modality model is ",best_d,"\n")
-    perf_validate[[j]] <- data.frame(Complexity = paste0(j,"_modality"), Model = paste0(best_d, collapse = ""), Value = c(perf_j$roc[[best_ind]],perf_j$pr[[best_ind]],perf_j$ll[[best_ind]]), Type = c("AUROC","AUCPR","Weighted LogLoss"))
+    perf_validate[[j]] <- data.frame(Complexity = paste0(j,"_modality"), Model = paste0(best_d, collapse = ""), Value = c(perf_j$roc[[best_ind]],perf_j$pr[[best_ind]],perf_j$ll[[best_ind]]), Type = c("AUROC","AUPRC","Weighted LogLoss"))
     
     cat("...Evaluating on outer test set\n")
     x_train_i <- do.call(cbind, data_list[comb_list_fil[[best_ind]]])[cv_list$outer$train[[i]],, drop = F] %>% as.data.frame()
@@ -472,7 +472,7 @@ fit_forwardSelect <- function(
     
     cat("......Prediction performance on outer test set: AUROC: ",roc_test,", AUPRC: ", pr_test, " & weighted log loss: ",ll_test,"\n")
     
-    perf_test[[j]] <- data.frame(Complexity = paste0(j,"_modality"), Model = paste0(best_d, collapse = ""), Value = c(roc_test,pr_test,ll_test), Type = c("AUROC","AUCPR","Weighted LogLoss"))
+    perf_test[[j]] <- data.frame(Complexity = paste0(j,"_modality"), Model = paste0(best_d, collapse = ""), Value = c(roc_test,pr_test,ll_test), Type = c("AUROC","AUPRC","Weighted LogLoss"))
     
   }
   
@@ -974,7 +974,7 @@ fit_forwardSelectEnsemble = function(
   return(list(perf = data.frame(Complexity = "1 Dataset", 
                                 Model = c(colnames(roc_base)[best_ind_roc_base],colnames(pr_base)[best_ind_pr_base], colnames(ll_base)[best_ind_ll_base]), 
                                 Value = c(roc_base[1,best_ind_roc_base],pr_base[1,best_ind_pr_base],ll_base[1,best_ind_ll_base]), 
-                                Type = c("AUROC","AUCPR","Weighted LogLoss")), mod = base[[best_base]]))
+                                Type = c("AUROC","AUPRC","Weighted LogLoss")), mod = base[[best_base]]))
   
   cat("Prepare for ensemble learning\n")
   pred_base_train = lapply(base, function(x) arrange(x$pred, Resample, rowIndex)$One) %>% as.data.frame()
@@ -1044,7 +1044,7 @@ fit_forwardSelectEnsemble = function(
     best_ind_pr = unlist(perf$pr) %>% which.max()
     best_ind_ll = unlist(perf$ll) %>% which.min()
     perf_all[[j]] = data.frame(Complexity = paste0(j+1," Datasets"), Model = c(names(fit)[best_ind_roc],names(fit)[best_ind_pr], names(fit)[best_ind_ll]),
-                               Value = c(perf$roc[[best_ind_roc]], perf$pr[[best_ind_pr]], perf$ll[[best_ind_ll]]), Type = c("AUROC","AUCPR","Weighted LogLoss"))
+                               Value = c(perf$roc[[best_ind_roc]], perf$pr[[best_ind_pr]], perf$ll[[best_ind_ll]]), Type = c("AUROC","AUPRC","Weighted LogLoss"))
     fit_all[[j]] = fit[[best_ind_ll]]
 
     best_c = comb_list_fil[[best_ind_ll]]
@@ -1052,7 +1052,7 @@ fit_forwardSelectEnsemble = function(
   }
 
   perf_all = do.call(rbind, perf_all) %>% rbind(data.frame(Complexity = "1 Dataset", Model = c(colnames(roc_base)[best_ind_roc_base],colnames(pr_base)[best_ind_pr_base], colnames(ll_base)[best_ind_ll_base]),
-                                                           Value = c(roc_base[1,best_ind_roc_base],pr_base[1,best_ind_pr_base],ll_base[1,best_ind_ll_base]), Type = c("AUROC","AUCPR","Weighted LogLoss")),.)
+                                                           Value = c(roc_base[1,best_ind_roc_base],pr_base[1,best_ind_pr_base],ll_base[1,best_ind_ll_base]), Type = c("AUROC","AUPRC","Weighted LogLoss")),.)
   return(list(perf = perf_all, mod = fit_all))
   
 }
