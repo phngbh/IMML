@@ -6,16 +6,17 @@ process model_training {
     val algorithm
     val p_metric
     val feature
+    val from_clinical
     val fs_config_file
     val package_path
 
     script:
     """
-    Rscript ${package_path}R/run_model_training.R --iter ${iter} --integration ${integration} --algorithm ${algorithm} --p_metric ${p_metric} --feature ${feature} --config ${fs_config_file}
+    Rscript ${package_path}R/run_model_training.R --iter ${iter} --integration ${integration} --algorithm ${algorithm} --p_metric ${p_metric} --feature ${feature} --from_clinical ${from_clinical} --config ${fs_config_file}
     """
 }
 
 workflow {
     iterations = Channel.from( 1.. params.n_iterations )
-    model_training(iterations, params.integration, params.algorithm, params.p_metric, params.feature, params.fs_config_file, params.package_path)
+    model_training(iterations, params.integration, params.algorithm, params.p_metric, params.feature, params.from_clinical, params.fs_config_file, params.package_path)
 }

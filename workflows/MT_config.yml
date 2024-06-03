@@ -6,3 +6,4 @@ integration: FFS
 algorithm: glmnet
 p_metric: AUPRC
 feature: GSEA
+from_clinical: True

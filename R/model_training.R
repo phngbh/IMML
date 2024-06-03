@@ -30,6 +30,7 @@ get_args <- function(
     make_option(c("--algorithm"), type="character", default="glmnet", help="Machine learning algorithm"),
     make_option(c("--p_metric"), type="character", default="AUPRC", help="Performance metrics"),
     make_option(c("--feature"), type="character", default="union", help="Type of features used for training ('GSEA', 'thresholding' or 'union')"),
+    make_option(c("--from_clinical"), type="logical", default="FALSE", help="Should FFS start from the Clinical modality"),
     make_option(c("--outdir"), type="character", default=NULL, help="Output directory"),
     make_option(c("--config"), type="character", default=NULL, help="Path to .yml config file")
   )

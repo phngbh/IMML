@@ -108,19 +108,30 @@ cv_list <- make_cv_list(outcome = as.factor(outcome))
 
 cat("Train and evaluate models\n")
 outcome <- ifelse(outcome == 1, "One", "Zero") %>% factor(levels = c("One","Zero"))
-if (integration == "FFS"){
-  res <- fit_forwardSelect(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
-  res <- fit_forwardSelectFromClinical(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,"fromClinical",iter,sep = "_"),".rds")))
-} else if (integration == "ensemble") {
-  res <- fit_ensemble(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
+if (opt$from_clinical){
+  if (integration == "FFS"){
+    res <- fit_forwardSelectFromClinical(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
+    saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,"fromClinical",iter,sep = "_"),".rds")))
+  } else if (integration == "ensemble") {
+    res <- fit_ensemble(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
+    saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  } else {
+    res <- fit_forwardSelectFromClinical(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
+    saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"FFS",algorithm,p_metric,features,"fromClinical",iter,sep = "_"),".rds")))
+    res <- fit_ensemble(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
+    saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"ensemble",algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  }
 } else {
-  res <- fit_forwardSelect(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"FFS",algorithm,p_metric,features,iter,sep = "_"),".rds")))
-  res <- fit_forwardSelectFromClinical(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"FFS",algorithm,p_metric,features,"fromClinical",iter,sep = "_"),".rds")))
-  res <- fit_ensemble(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
-  saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"ensemble",algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  if (integration == "FFS"){
+    res <- fit_forwardSelect(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
+    saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  } else if (integration == "ensemble") {
+    res <- fit_ensemble(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
+    saveRDS(res,file.path("model_results", paste0(paste(outcome_name,integration,algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  } else {
+    res <- fit_forwardSelect(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
+    saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"FFS",algorithm,p_metric,features,iter,sep = "_"),".rds")))
+    res <- fit_ensemble(data_list = input_data, y = outcome, cv_list = cv_list, p_metric = p_metric, algorithm = algorithm, n = iter)
+    saveRDS(res,file.path("model_results", paste0(paste(outcome_name,"ensemble",algorithm,p_metric,features,iter,sep = "_"),".rds")))
+  }
 }
