@@ -5,11 +5,11 @@ date: "`r Sys.Date()`"
 output:
   html_document:
     code_folding: "hide"
+params:
+  args: ''
 ---
 
 ```{r setup, include=FALSE}
-#adjust working directory
-knitr::opts_knit$set(root.dir = '/home/willy/Helmholtz/testing/res_test')
 library(ggplot2)
 library(RColorBrewer)
 library(dplyr)
@@ -19,17 +19,23 @@ library(tibble)
 library(ggalluvial)
 library(tidyr)
 library(plotly)
+library(yaml)
+
+args = params$args
 ```
 
-```{r}
-modals_ids <- readRDS("../modals_ids.rds")
-input_data <- readRDS("../DSPN_input_data.rds")
-targets <- readRDS("../targets.rds")
+```{r file_import}
+fs_config = read_yaml(args$fs_config_file)
+
+modals_ids <- readRDS(fs_config$modals_ids)
+input_data <- readRDS(paste0(fs_config$out_dir,"model_results/",
+                             fs_config$target_name, "_input_data.rds"))
+targets <- readRDS(fs_config$targets)
 modalities <- names(input_data)
 annos = list()
 for (mod in modalities) {
   annos[[mod]] =
-    readRDS(file.path('../annotation_files', paste0('annotation_', mod, '.rds')))
+    readRDS(file.path(args$annotation_folder, paste0('annotation_', mod, '.rds')))
 }
 
 col <- brewer.pal(length(input_data),"Set3")
@@ -39,17 +45,21 @@ names(col) = modalities
 # Prediction performance
 
 ```{r}
-iters = 10
-result_file_name = 'DSPN_FFS_glmnet_AUPRC_union_'
+iters = args$n_iterations
+if (args$from_clinical){
+  result_file_name = paste(fs_config$target_name, args$integration, args$algorithm, args$p_metric, args$feature, 'fromClinical', sep='_')
+} else {
+  result_file_name = paste(fs_config$target_name, args$integration, args$algorithm, args$p_metric, args$feature, sep='_')
+}
 ```
 
 ```{r}
 perf_list <- list()
 for (i in 1:iters){
-  file <-  paste0(result_file_name, i, ".rds")
+  file <-  paste0(result_file_name, '_', i, ".rds")
   
-  if (file.exists(file)){
-    res <- readRDS(file)
+  if (file.exists(file.path(fs_config$out_dir, 'model_results', file))){
+    res <- readRDS(file.path(fs_config$out_dir, 'model_results', file))
     perf <- res$perf_validate
     perf_list[[i]] <- perf
   } 
@@ -57,7 +67,7 @@ for (i in 1:iters){
 perf_list <- perf_list[lapply(perf_list, length) > 0]
 perf_df <- do.call("rbind", perf_list)
 
-ggplot(filter(perf_df, Type == "AUCPR"), aes(x = Complexity, y = Value)) + 
+ggplot(filter(perf_df, Type == "AUPRC"), aes(x = Complexity, y = Value)) + 
   geom_boxplot(fill = "deepskyblue4", outlier.shape = NA) + 
   geom_point(alpha = 0.5) +
   theme(text = element_text(size = 15),
@@ -92,78 +102,79 @@ ggplot(filter(perf_df, Type == "AUROC"), aes(x = Complexity, y = Value)) +
 # Trajectory of FFS
 
 ```{r}
-perf_df = filter(perf_df, Type == "AUCPR") %>%
+if (args$integration == 'FFS'){
+  perf_df = filter(perf_df, Type == "AUPRC") %>%
   mutate(Iteration = rep(1:iters, each = length(input_data)))
-
-for (mod in modalities) {
-  perf_df[mod] = vector(mode = "numeric", length = nrow(perf_df))
-}
-
-for (i in 1:nrow(perf_df)){
+  
   for (mod in modalities) {
-    perf_df[[mod]][i] = ifelse(length(grep(mod, perf_df$Model[i])) > 0, 1, 0)
+    perf_df[mod] = vector(mode = "numeric", length = nrow(perf_df))
   }
-}
-
-perf_df = pivot_longer(perf_df, cols = 6:last_col(), 
-                         names_to = "Data", values_to = "Comb") %>% 
-  filter(Comb == 1)
-
-df_list = list()
-for (i in 1:iters){
-  tmp = filter(perf_df, Iteration == i)
-  df_list[[i]] = list()
-  for (j in 1:length(input_data)){
-    if (j == 1){
-      df = filter(tmp, Complexity == "1_modality" & Iteration == i)
-      df_list[[i]][[j]] = df
-    } else {
-      comp = paste0(j,"_modality")
-      comp0 = paste0(j-1,"_modality")
-      mod = filter(tmp, Complexity == comp)$Data %>% as.character()
-      mod0 = filter(tmp, Complexity == comp0)$Data %>% as.character()
-      mol = setdiff(mod,mod0)
-      df = filter(tmp, Complexity == comp & Data == mol)
-      df_list[[i]][[j]] = df
+  
+  for (i in 1:nrow(perf_df)){
+    for (mod in modalities) {
+      perf_df[[mod]][i] = ifelse(length(grep(mod, perf_df$Model[i])) > 0, 1, 0)
     }
   }
-  df_list[[i]] = do.call(rbind, df_list[[i]])
+  
+  perf_df = pivot_longer(perf_df, cols = 6:last_col(), 
+                           names_to = "Data", values_to = "Comb") %>% 
+    filter(Comb == 1)
+  
+  df_list = list()
+  for (i in 1:iters){
+    tmp = filter(perf_df, Iteration == i)
+    df_list[[i]] = list()
+    for (j in 1:length(input_data)){
+      if (j == 1){
+        df = filter(tmp, Complexity == "1_modality" & Iteration == i)
+        df_list[[i]][[j]] = df
+      } else {
+        comp = paste0(j,"_modality")
+        comp0 = paste0(j-1,"_modality")
+        mod = filter(tmp, Complexity == comp)$Data %>% as.character()
+        mod0 = filter(tmp, Complexity == comp0)$Data %>% as.character()
+        mol = setdiff(mod,mod0)
+        df = filter(tmp, Complexity == comp & Data == mol)
+        df_list[[i]][[j]] = df
+      }
+    }
+    df_list[[i]] = do.call(rbind, df_list[[i]])
+  }
+  perf_df_fil = do.call(rbind, df_list) %>% arrange(Iteration, Complexity)
+  perf_df_fil$Data = factor(perf_df_fil$Data, levels = modalities)
+  ggplot(perf_df_fil, aes(x = Complexity, stratum = Data, alluvium = Iteration, fill = Data, label = Data)) + 
+    scale_fill_manual(values = col) + 
+    #geom_alluvium(fill = "skyblue") + 
+    geom_flow(stat = "alluvium", lode.guidance = "frontback") +
+    geom_stratum(color = NA) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 15),
+          axis.title.x = element_blank(),
+          axis.text.y = element_text(size = 15),
+          legend.text = element_text(size = 15),
+          legend.title = element_blank(),
+          panel.background = element_rect(fill = "white",
+                                  colour = "white",
+                                  linewidth = 0.5, linetype = "solid"),
+          panel.grid.major = element_line(linewidth = 0.25, linetype = 'solid',
+                                  colour = "grey"), 
+          panel.grid.minor = element_line(linewidth = 0.25, linetype = 'solid',
+                                  colour = "grey"))
+} else {
+  print('Ensemble was selected as the integration method.')
 }
-perf_df_fil = do.call(rbind, df_list) %>% arrange(Iteration, Complexity)
-perf_df_fil$Data = factor(perf_df_fil$Data, levels = modalities)
-ggplot(perf_df_fil, aes(x = Complexity, stratum = Data, alluvium = Iteration, fill = Data, label = Data)) + 
-  scale_fill_manual(values = col) + 
-  #geom_alluvium(fill = "skyblue") + 
-  geom_flow(stat = "alluvium", lode.guidance = "frontback") +
-  geom_stratum(color = NA) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 15),
-        axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 15),
-        legend.text = element_text(size = 15),
-        legend.title = element_blank(),
-        panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                linewidth = 0.5, linetype = "solid"),
-        panel.grid.major = element_line(linewidth = 0.25, linetype = 'solid',
-                                colour = "grey"), 
-        panel.grid.minor = element_line(linewidth = 0.25, linetype = 'solid',
-                                colour = "grey")) 
 ```
 
 # Feature importance
 
 ```{r, warning=FALSE, message=FALSE}
 var_list <- list()
-perf_test_list <- list()
-n_modals <- list()
 for (i in 1:iters){
-  file <-  paste0(result_file_name, i, ".rds")
-  if (file.exists(file)){
-    res <- readRDS(file)
-    n_max <- which.max(filter(res$perf_validate, Type == "AUCPR")$Value)
-    n_modals[[i]] <- n_max
+  file <-  paste0(result_file_name, '_', i, ".rds")
+  if (file.exists(file.path(fs_config$out_dir, 'model_results', file))){
+    res <- readRDS(file.path(fs_config$out_dir, 'model_results', file))
+    n_max <- which.max(filter(res$perf_validate, Type == "AUPRC")$Value)
     var <- res$var[[n_max]]
-    perf_test_list[[i]] <- filter(res$perf_test, Type == "AUCPR")$Value[n_max]
+    var = var[names(var)  != 'ranv']
     var_list[[i]] <- var
   } 
 }
@@ -175,68 +186,70 @@ agg_df$adjP <- agg_df$Score*length(var_list)
 agg_df$adjP <- p.adjust(agg_df$adjP, method = "fdr")
 final_vars <- rownames(filter(agg_df, adjP < 0.05))
 
-df <- do.call("cbind",input_data)
-df <- df[,final_vars]
-y <- targets[[1]]
-names(y) <- rownames(targets)
-y <- y[rownames(df)]
-y <- ifelse(y == 1, "One", "Zero") %>% factor(levels = c("One","Zero"))
-
-my_control <- trainControl(
-    method="repeatedcv",
-    number=5,
-    repeats = 4,
-    savePredictions="final",
-    classProbs=TRUE,
-    summaryFunction=prSummary,
-    sampling = "smote",
-    allowParallel = T
-)
-
-set.seed(993)
-fit <- caret::train(x = df,
-                      y = y,
-                      method="glmnet",
-                      metric="AUC",
-                      tuneLength = 20,
-                      maximize = TRUE,
-                      trControl=my_control,
-                      importance = TRUE)
-var_imp <- varImp(fit)$importance %>% rownames_to_column("var")
-var_imp$coef <- coef(fit$finalModel, fit$bestTune$lambda)[-1,1]
-var_imp$sign <- -var_imp$coef/abs(var_imp$coef)
-var_imp$sign[is.na(var_imp$sign)] <- 0
-var_imp$Overall <- var_imp$Overall*var_imp$sign
-
-```
-
-```{r}
-var_imp_fil = filter(var_imp, Overall != 0)
-var_imp_df = data.frame(Var = var_imp_fil$var,
-                              Type = vector("character", nrow(var_imp_fil)),
-                              Name = vector("character", nrow(var_imp_fil)),
-                              Score = var_imp_fil$Overall)
-
-for (mod in modalities) {
-  var_imp_df$Type[var_imp_df$Var %in% annos[[mod]]$Variable] = mod
-  var_imp_df$Name[var_imp_df$Type == mod] =
-    annos[[mod]]$Name[match(var_imp_df$Var[var_imp_df$Type == mod], annos[[mod]]$Variable)]
+if (length(final_vars) > 1){
+  df <- do.call("cbind",input_data)
+  df <- df[,final_vars, drop=FALSE]
+  y <- targets[[1]]
+  names(y) <- rownames(targets)
+  y <- y[rownames(df)]
+  y <- ifelse(y == 1, "One", "Zero") %>% factor(levels = c("One","Zero"))
+  
+  my_control <- trainControl(
+      method="repeatedcv",
+      number=5,
+      repeats = 4,
+      savePredictions="final",
+      classProbs=TRUE,
+      summaryFunction=prSummary,
+      sampling = "smote",
+      allowParallel = T
+  )
+  
+  set.seed(993)
+  fit <- caret::train(x = df,
+                        y = y,
+                        method="glmnet",
+                        metric="AUC",
+                        tuneLength = 20,
+                        maximize = TRUE,
+                        trControl=my_control,
+                        importance = TRUE)
+  var_imp <- varImp(fit)$importance %>% rownames_to_column("var")
+  var_imp$coef <- coef(fit$finalModel, fit$bestTune$lambda)[-1,1]
+  var_imp$sign <- -var_imp$coef/abs(var_imp$coef)
+  var_imp$sign[is.na(var_imp$sign)] <- 0
+  var_imp$Overall <- var_imp$Overall*var_imp$sign
+  
+  var_imp_fil = filter(var_imp, Overall != 0)
+  var_imp_df = data.frame(Var = var_imp_fil$var,
+                                Type = vector("character", nrow(var_imp_fil)),
+                                Name = vector("character", nrow(var_imp_fil)),
+                                Score = var_imp_fil$Overall)
+  
+  for (mod in modalities) {
+    var_imp_df$Type[var_imp_df$Var %in% annos[[mod]]$Variable] = mod
+    var_imp_df$Name[var_imp_df$Type == mod] =
+      annos[[mod]]$Name[match(var_imp_df$Var[var_imp_df$Type == mod],
+                              annos[[mod]]$Variable)]
+  }
+  var_imp_df = var_imp_df[order(abs(var_imp_df$Score), decreasing = T),]
+  var_imp_df$Var = factor(var_imp_df$Var, levels = var_imp_df$Var)
+  p = ggplot(var_imp_df, aes(x = Var, y = Score, fill = Type)) + 
+    geom_bar(stat = "Identity") +
+    scale_fill_manual(values = col, drop = T)+
+    ylab("Scaled prediction importance score") +
+    xlab("Important variables") +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+          panel.background = element_rect(fill = "white",
+                                  colour = "white",
+                                  linewidth = 0.5, linetype = "solid"),
+          panel.grid.major = element_line(linewidth = 0.25, linetype = 'solid',
+                                  colour = "grey"), 
+          panel.grid.minor = element_line(linewidth = 0.25, linetype = 'solid',
+                                  colour = "grey"))
+  ggplotly(p)
+} else {
+  print("Not enough significant features!")
 }
-var_imp_df = var_imp_df[order(abs(var_imp_df$Score), decreasing = T),]
-var_imp_df$Var = factor(var_imp_df$Var, levels = var_imp_df$Var)
-p = ggplot(var_imp_df, aes(x = Var, y = Score, fill = Type)) + 
-  geom_bar(stat = "Identity") +
-  scale_fill_manual(values = col, drop = T)+
-  ylab("Scaled prediction importance score") +
-  xlab("Important variables") +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-        panel.background = element_rect(fill = "white",
-                                colour = "white",
-                                linewidth = 0.5, linetype = "solid"),
-        panel.grid.major = element_line(linewidth = 0.25, linetype = 'solid',
-                                colour = "grey"), 
-        panel.grid.minor = element_line(linewidth = 0.25, linetype = 'solid',
-                                colour = "grey"))
-ggplotly(p)
 ```

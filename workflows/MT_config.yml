@@ -6,4 +6,6 @@ integration: FFS
 algorithm: glmnet
 p_metric: AUPRC
 feature: GSEA
-from_clinical: True
+from_clinical: True # True or False, needs to be capitalized
+
+annotation_dir: /your/path/here/

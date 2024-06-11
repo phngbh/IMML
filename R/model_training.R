@@ -79,7 +79,7 @@ make_selected_list <- function(
       
     } else {
       
-      if (m %in% c("Methylomics", "Transcriptomics","Proteomics")){
+      if (m %in% c("Methylomics")){
         
         if (fs_res$resampling == T){
           gsea_probe <- fs_res$gsea_probe_rra %>% unlist()
@@ -98,14 +98,14 @@ make_selected_list <- function(
         }
       } 
       
-      if (m %in% c("Metabolomics", "Olink")){
+      else {
         
         if (fs_res$resampling == T){
-          gsea_probe <- fs_res$msea_m_rra
-          de_probe <- fs_res$d_m_rra
+          gsea_probe <- fs_res[[6]] %>% unlist()
+          de_probe <- fs_res[[8]] %>% unlist()
         } else {
-          gsea_probe <- fs_res$msea_m
-          de_probe <- fs_res$d_m
+          gsea_probe <- fs_res[[5]] %>% unlist()
+          de_probe <- fs_res[[7]] %>% unlist()
         }
         
         if (feature_type == "union"){
@@ -518,12 +518,12 @@ fit_forwardSelectFromClinical = function(
   ll_clin = list()
   for (n in 1:n_cv){
     cat("...Fold ",n,"\n")
-    x_train_n_clin = data_list$Clinical[cv_list$inner$train[[i]][[n]],] %>% as.data.frame()
+    x_train_n_clin = data_list$Clinical[cv_list$inner$train[[i]][[n]],,drop=FALSE] %>% as.data.frame()
     if (ncol(x_train_n_clin) == 1){
       x_train_n_clin <- cbind(x_train_n_clin, ranv = 0)
     }
     y_train_n_clin = y[rownames(x_train_n_clin)]
-    x_test_n_clin = data_list$Clinical[cv_list$inner$test[[i]][[n]],] %>% as.data.frame()
+    x_test_n_clin = data_list$Clinical[cv_list$inner$test[[i]][[n]],,drop=FALSE] %>% as.data.frame()
     if (ncol(x_test_n_clin) == 1){
       x_test_n_clin <- cbind(x_test_n_clin, ranv = 0)
     }
@@ -539,11 +539,11 @@ fit_forwardSelectFromClinical = function(
   perf_clin_validate = data.frame(Complexity = "1_modality", Model = "Clinical", Value = c(median(unlist(roc_clin)), median(unlist(pr_clin)), median(unlist(ll_clin))), Type = c("AUROC","AUPRC","Weighted LogLoss"))
   
   cat("...Testing with clinical as baseline\n")
-  x_train_i_clin = data_list$Clinical[cv_list$outer$train[[i]],] %>% as.data.frame()
+  x_train_i_clin = data_list$Clinical[cv_list$outer$train[[i]],,drop=FALSE] %>% as.data.frame()
   if (ncol(x_train_i_clin) == 1){
     x_train_i_clin <- cbind(x_train_i_clin, ranv = 0)
   }
-  x_test_i_clin = data_list$Clinical[cv_list$outer$test[[i]],] %>% as.data.frame()
+  x_test_i_clin = data_list$Clinical[cv_list$outer$test[[i]],,drop=FALSE] %>% as.data.frame()
   if (ncol(x_test_i_clin) == 1){
     x_test_i_clin <- cbind(x_test_i_clin, ranv = 0)
   }
@@ -598,12 +598,12 @@ fit_forwardSelectFromClinical = function(
       for (n in 1:n_cv){
         
         cat("......Fold ",n,"\n")
-        x_train_n = do.call(cbind, data_list[c("Clinical",comb_list_fil[[d]])])[cv_list$inner$train[[i]][[n]],] %>% as.data.frame()
+        x_train_n = do.call(cbind, data_list[c("Clinical",comb_list_fil[[d]])])[cv_list$inner$train[[i]][[n]],,drop=FALSE] %>% as.data.frame()
         if (ncol(x_train_n) == 1){
           x_train_n <- cbind(x_train_n, ranv = 0)
         }
         y_train_n = y[rownames(x_train_n) ]
-        x_test_n = do.call(cbind, data_list[c("Clinical",comb_list_fil[[d]])])[cv_list$inner$test[[i]][[n]],] %>% as.data.frame()
+        x_test_n = do.call(cbind, data_list[c("Clinical",comb_list_fil[[d]])])[cv_list$inner$test[[i]][[n]],,drop=FALSE] %>% as.data.frame()
         if (ncol(x_test_n) == 1){
           x_test_n <- cbind(x_test_n, ranv = 0)
         }
@@ -634,11 +634,11 @@ fit_forwardSelectFromClinical = function(
     perf_validate[[j]] = data.frame(Complexity = paste0(j+1,"_modality"), Model = paste0(c("Clinical",best_d), collapse = ""), Value = c(perf_j$roc[[best_ind]],perf_j$pr[[best_ind]],perf_j$ll[[best_ind]]), Type = c("AUROC","AUPRC","Weighted LogLoss"))
     
     cat("...Evaluating on outer test set\n")
-    x_train_i = do.call(cbind, data_list[comb_list_fil[[best_ind]]])[cv_list$outer$train[[i]],] %>% as.data.frame()
+    x_train_i = do.call(cbind, data_list[comb_list_fil[[best_ind]]])[cv_list$outer$train[[i]],,drop=FALSE] %>% as.data.frame()
     if (ncol(x_train_i) == 1){
       x_train_i <- cbind(x_train_i, ranv = 0)
     }
-    x_test_i = do.call(cbind, data_list[comb_list_fil[[best_ind]]])[cv_list$outer$test[[i]],] %>% as.data.frame()
+    x_test_i = do.call(cbind, data_list[comb_list_fil[[best_ind]]])[cv_list$outer$test[[i]],,drop=FALSE] %>% as.data.frame()
     if (ncol(x_test_i) == 1){
       x_test_i <- cbind(x_test_i, ranv = 0)
     }
@@ -663,7 +663,7 @@ fit_forwardSelectFromClinical = function(
   perf_validate = do.call(rbind, perf_validate) %>% rbind(perf_clin_validate,.)
   perf_test = do.call(rbind, perf_test) %>% rbind(perf_clin_test,.)
   cat("Done\n")
-  return(list(perf_validate = perf_validate, perf_test = perf_test, var = c(var_clin,var_list), predProbs_test = c(pred_test_clin, pred_list), train_samples = cv_list$outer$train[[i]])) 
+  return(list(perf_validate = perf_validate, perf_test = perf_test, var = c(list(var_clin),var_list), predProbs_test = c(pred_test_clin, pred_list), train_samples = cv_list$outer$train[[i]])) 
 }
 
 fit_ensemble = function(
