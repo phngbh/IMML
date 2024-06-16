@@ -1,38 +1,50 @@
 name: IMML
 channels:
-  - conda-forge
   - bioconda
+  - conda-forge
+  - defaults
 dependencies:
-  - r-base
-  - r-essentials
-  - r-tidyverse
+  - r-base=4.2
   - r-tibble
-  - r-xtable
-  - r-cowplot
-  - r-stringr
   - r-scales
-  - r-ggrepel
-  - r-ggpubr
-  - r-rcolorbrewer
   - r-devtools
-  - bioconductor-reactome.db
-  - bioconductor-fgsea
   - r-proc
-  - r-robustrankaggreg
-  - bioconductor-globaltest
-  - bioconductor-snpstats
+  - r-dplyr
+  - r-stringr
+  - r-tidyr
+  - r-xtable
   - r-caret
-  - r-caretensemble
-  - r-haven
+  - r-robustrankaggreg
+  - bioconductor-biocparallel
+  - bioconductor-fgsea
+  - bioconductor-globaltest
   - bioconductor-limma
+  - r-funr
+  - r-ggplot2
+  - r-dbplyr
+  - r-filelock
+  - r-gt
+  - bioconductor-bumphunter
+  - bioconductor-matrixgenerics
+  - r-matrixstats
+  - bioconductor-org.hs.eg.db
+  - bioconductor-champ
+  - bioconductor-illuminahumanmethylation450kanno.ilmn12.hg19
+  - bioconductor-summarizedexperiment
+  - r-optparse
+  - bioconductor-minfi
+  - bioconductor-methylgsa
+  - r-haven
+  - bioconductor-dmrcate
   - r-glmnet
-  - r-proc
+  - bioconda::plink
+  - bioconductor-snpstats
+  - r-caretensemble
   - r-glmnetutils
   - r-dmwr
   - r-mlmetrics
   - r-randomforest
   - r-kernlab
   - r-nnls
-  - r-catools
-  - r-optparse
   - r-themis
+prefix: /home/willy/miniconda3/envs/IMML
