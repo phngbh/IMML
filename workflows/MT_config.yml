@@ -1,11 +1,11 @@
 package_path: /your/path/IMML/
 fs_config_file: /your/path/FS_config.yml
 
-n_iterations: 10
+n_iterations: 100
 integration: FFS
 algorithm: glmnet
 p_metric: AUPRC
 feature: GSEA
-from_clinical: True # True or False, needs to be capitalized
+from_clinical: True
 
 annotation_dir: /your/path/here/

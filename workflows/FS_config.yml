@@ -14,20 +14,20 @@ feature_selection:
   - modality: Clinical
     data: /your/path/clinical_data.rds
     resampling: False
-    n_iterations: 10
+    n_iterations: 100
     train_split: 0.8
   - modality: Genomics
     file_prefix: /your/path/genomics_processed
     geneloc_file: /your/path/example.gene.loc
     geneset_file: /your/path/geneset.txt
-    n_iterations: 10
+    n_iterations: 100
     train_split: 0.8
   - modality: Methylomics
     data: /your/path/methylomics_data.rds
     pathways: /your/path/pathways_methyl.rds
     dualmap_file: /your/path/dualmap450kEID.rda
     DM_threshold: 2.4e-07
-    n_iterations: 10
+    n_iterations: 100
     train_split: 0.8
   - modality: targeted
     name: Metabolomics
@@ -35,14 +35,14 @@ feature_selection:
     pathways: /your/path/metab_annot.rds
     msea_fdr: 0.2
     resampling: True
-    n_iterations: 10
+    n_iterations: 100
     train_split: 0.8
   - modality: untargeted
     name: Proteomics
     data: /your/path/proteomics_data.rds
     pathways: /your/path/prot_annot.rds
     resampling: True
-    n_iterations: 10
+    n_iterations: 100
     train_split: 0.8
   - modality: untargeted
     name: Transcriptomics
@@ -50,5 +50,5 @@ feature_selection:
     pathways: /your/path/transc_annot.rds
     gsea_fdr: 0.2
     resampling: True
-    n_iterations: 10
+    n_iterations: 100
     train_split: 0.8

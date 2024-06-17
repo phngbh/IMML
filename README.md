@@ -19,7 +19,7 @@ mv magma ~/miniconda3/envs/IMML/bin
 ## Usage guide
 For an in-depth usage guide please refer to the ```vignette.html```.
 
-First run the feature selection workflow:
+First run the feature selection workflow on your command line:
 ```
 nextflow ~/.../IMML/workflows/feature_selection.nf -params-file ~/.../IMML/workflows/FS_config.yml -c ~/.../IMML/nextflow.config
 ```
