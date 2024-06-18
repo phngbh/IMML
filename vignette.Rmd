@@ -2,8 +2,7 @@
 title: "IMML - vignette"
 author: "IMML Package"
 date: "`r Sys.Date()`"
-output:
-  html_document:
+output: md_document
 ---
 
 # IMML

@@ -6,7 +6,7 @@ output:
   html_document:
     code_folding: "hide"
 params:
-  args: ''
+  args: !r list(fs_config_file='/home/willy/Helmholtz/nextflow_tests/FS_config.yml', annotation_folder='/home/willy/Helmholtz/testing/annotation_files/', n_iterations=10, integration='ensemble', algorithm='glmnet', p_metric='AUPRC', feature='union', from_clinical=as.logical('true'))
 ---
 
 ```{r setup, include=FALSE}
