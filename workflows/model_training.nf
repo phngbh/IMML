@@ -48,6 +48,8 @@ workflow {
     iterations = Channel.from( 1.. params.n_iterations )
     model_train_exit = model_training(iterations, params.integration, params.algorithm, params.p_metric, params.feature, params.from_clinical, params.fs_config_file, params.package_path).collect()
     
-    fs_config = new org.yaml.snakeyaml.Yaml().load(file(params.fs_config_file))
-    report(params.n_iterations, params.integration, params.algorithm, params.p_metric, params.feature, params.from_clinical, params.fs_config_file, params.package_path, params.annotation_dir, fs_config.target_name, fs_config.out_dir, model_train_exit)
-}
+    if( params.integration == 'FFS' ) {
+        fs_config = new org.yaml.snakeyaml.Yaml().load(file(params.fs_config_file))
+        report(params.n_iterations, params.integration, params.algorithm, params.p_metric, params.feature, params.from_clinical, params.fs_config_file, params.package_path, params.annotation_dir, fs_config.target_name, fs_config.out_dir, model_train_exit)
+    }
+    }
