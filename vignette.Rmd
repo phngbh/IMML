@@ -33,11 +33,18 @@ Input file paths and and parameters are specified in the `FS_config.yml` and `MT
     out_dir: /your/path/out/
     seed: 993
 
-Please specify the path to the IMML package in both config files. Additionally, for the `MT_config.yml` file specify the path to the `FS_config.yml` file.
+Please specify the path to the IMML package in both config files. Additionally, for the `MT_config.yml` file specify the path to the `FS_config.yml` file used for the analysis.
 
 ### Feature Selection
 
 The feature selection step is customized to be appropriate for each data type. In general we implement generalized gene set enrichment analysis (GSEA) for molecular data and regularised linear model for clinical data. By default, targeted assays such as metabolomics and protein panels are selected using global test (Goeman et al, 2004), and untargeted assays such as transcriptomics and proteomics are selected using the conventional GSEA (Subramanian et al, 2005). Genomics data is selected with MAGMA (de Leeuw et al, 2015) and methylomics is selected with methylGSA (Ren et al, 2019). In practice, users can alter this setting, depending on the type of data and research questions. Details of the selection algorithm could be found in the paper.
+
+The first step in feature selection is the data partitioning. Here samples, which are present in the data of each modality, are reserved for the eventual model training. These samples are split into k-fold cross-validation sets. The rest of the samples are used for feature selection and split into train and test data for each modality. You can specify parameters for data partitioning in the `data_partioning` section of the `FS_config.yml` file:
+
+    data_partitioning:
+      k: 5
+      n_iterations: 10
+      percent: 0.8
 
 You can specify the modalities to be used in feature selection with the `feature_selection` list:
 
@@ -63,7 +70,7 @@ You can specify the modalities to be used in feature selection with the `feature
       - modality: targeted
         name: Metabolomics
         data: /your/path/metabolomics_data.rds
-        pathways: /your/path/metab_annot.rds
+        pathways: /your/path/metab_pathways.rds
         msea_fdr: 0.2
         resampling: True
         n_iterations: 100
@@ -71,20 +78,22 @@ You can specify the modalities to be used in feature selection with the `feature
       - modality: untargeted
         name: Proteomics
         data: /your/path/proteomics_data.rds
-        pathways: /your/path/prot_annot.rds
+        pathways: /your/path/prot_pathways.rds
         resampling: True
         n_iterations: 100
         train_split: 0.8
       - modality: untargeted
         name: Transcriptomics
         data: /your/path/transcriptomics_data.rds
-        pathways: /your/path/transc_annot.rds
+        pathways: /your/path/transc_pathways.rds
         gsea_fdr: 0.2
         resampling: True
         n_iterations: 100
         train_split: 0.8
 
 Of the `targeted` and `untargeted` modalities you can specify as many as needed, as long as all of them have distinct names, excluding `Clinical`, `Genomics` and `Methylomics`. These three modalities can only be specified once.
+
+More information on the input file formats can be found below.
 
 ### Model Training
 
@@ -105,6 +114,8 @@ As with feature selection, the model training can be customized using the `MT_co
     annotation_dir: /your/path/here/
 
 The `integration` options include `FFS` and `ensemble`. `algorithm` options include `glmnet`, `rf` (random forest) and `svmRadial` from the `caret` package. `p_metric` options include `wLogLoss` (weighted log loss), `AUROC` and `AUPRC`. `feature` options include `GSEA`, `thresholding` (DE?) and `union` (both).
+
+If `FFS` was chosen as the `integration` option, the workflow will generate a `html` report on the model performance and the most important features driving the prediction.
 
 ### Data input formats
 
@@ -127,3 +138,37 @@ targets = data.frame(phenotype=c(0,0,1), cov1=c(1,1,0), cov2=c(0.4,0.2,0.8), row
 ```{r}
 head(targets, n=3)
 ```
+
+The input files of the modalities used in feature selection (except genomics) are data frames, which do not contain any `NA` values and should be preprocessed (normalized, variance stabilized, etc.). The clinical input data has samples as rows and features as columns. Sample IDs and feature names have to be row and column names respectively. E.g.:
+
+```{r, echo=FALSE}
+clinical_data = data.frame(age=c(0.8, 0.3, 0.5), height=c(0.2, 0.6, 0.7), row.names = c(7041, 7788, 7468))
+```
+
+```{r}
+head(clinical_data, n=3)
+```
+
+For the other modalities (targeted, untargeted and methylomics) the input files are data frames with features as rows and samples as columns. Feature names and sample IDs have to be row and column names respectively. E.g.:
+
+```{r, echo=FALSE}
+transcriptomics_data = data.frame('3576'=c(6.14, 6.15, 6.02), '3327'=c(9.58, 9.81, 8.81), '3117'=c(10.16, 10.71, 10.72), row.names=c('gene_1', 'gene_2', 'gene_3'), check.names = F)
+```
+
+```{r}
+head(transcriptomics_data, n=3)
+```
+
+The pathway input files are named lists of character vectors. The names of the elements of the list are the names of the respective pathways and the elements of the character vectors are the names of the respective features present in the pathway. E.g.:
+
+```{r, echo=FALSE}
+transcriptomics_pathways = list('Metabolism'=c('gene_1', 'gene_2'), 'Immune response'=c('gene_2', 'gene_3'))
+```
+
+```{r}
+transcriptomics_pathways
+```
+
+Methylomics dualmap file????
+
+The genomics input files consist of .bed, .fam and .bim files, all with the same file prefix.

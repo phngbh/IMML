@@ -17,7 +17,7 @@ mv magma ~/miniconda3/envs/IMML/bin
 
 
 ## Usage guide
-For an in-depth usage guide please refer to the ```vignette.html```.
+For an in-depth usage guide please refer to the [vignette](./vignette.md).
 
 First run the feature selection workflow on your command line:
 ```

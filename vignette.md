@@ -35,7 +35,7 @@ and `MT_config.yml` files. As an example this is part of the
 
 Please specify the path to the IMML package in both config files.
 Additionally, for the `MT_config.yml` file specify the path to the
-`FS_config.yml` file.
+`FS_config.yml` file used for the analysis.
 
 ### Feature Selection
 
@@ -50,6 +50,19 @@ selected with MAGMA (de Leeuw et al, 2015) and methylomics is selected
 with methylGSA (Ren et al, 2019). In practice, users can alter this
 setting, depending on the type of data and research questions. Details
 of the selection algorithm could be found in the paper.
+
+The first step in feature selection is the data partitioning. Here
+samples, which are present in the data of each modality, are reserved
+for the eventual model training. These samples are split into k-fold
+cross-validation sets. The rest of the samples are used for feature
+selection and split into train and test data for each modality. You can
+specify parameters for data partitioning in the `data_partioning`
+section of the `FS_config.yml` file:
+
+    data_partitioning:
+      k: 5
+      n_iterations: 10
+      percent: 0.8
 
 You can specify the modalities to be used in feature selection with the
 `feature_selection` list:
@@ -76,7 +89,7 @@ You can specify the modalities to be used in feature selection with the
       - modality: targeted
         name: Metabolomics
         data: /your/path/metabolomics_data.rds
-        pathways: /your/path/metab_annot.rds
+        pathways: /your/path/metab_pathways.rds
         msea_fdr: 0.2
         resampling: True
         n_iterations: 100
@@ -84,14 +97,14 @@ You can specify the modalities to be used in feature selection with the
       - modality: untargeted
         name: Proteomics
         data: /your/path/proteomics_data.rds
-        pathways: /your/path/prot_annot.rds
+        pathways: /your/path/prot_pathways.rds
         resampling: True
         n_iterations: 100
         train_split: 0.8
       - modality: untargeted
         name: Transcriptomics
         data: /your/path/transcriptomics_data.rds
-        pathways: /your/path/transc_annot.rds
+        pathways: /your/path/transc_pathways.rds
         gsea_fdr: 0.2
         resampling: True
         n_iterations: 100
@@ -101,6 +114,8 @@ Of the `targeted` and `untargeted` modalities you can specify as many as
 needed, as long as all of them have distinct names, excluding
 `Clinical`, `Genomics` and `Methylomics`. These three modalities can
 only be specified once.
+
+More information on the input file formats can be found below.
 
 ### Model Training
 
@@ -139,6 +154,10 @@ options include `glmnet`, `rf` (random forest) and `svmRadial` from the
 loss), `AUROC` and `AUPRC`. `feature` options include `GSEA`,
 `thresholding` (DE?) and `union` (both).
 
+If `FFS` was chosen as the `integration` option, the workflow will
+generate a `html` report on the model performance and the most important
+features driving the prediction.
+
 ### Data input formats
 
 The `modals_ids.rds` file needs to be a data frame with samples as rows
@@ -163,3 +182,47 @@ name needs to be the same as the `target_name` variable in the
     ## 1746         0    1  0.4
     ## 1385         0    1  0.2
     ## 1932         1    0  0.8
+
+The input files of the modalities used in feature selection (except
+genomics) are data frames, which do not contain any `NA` values and
+should be preprocessed (normalized, variance stabilized, etc.). The
+clinical input data has samples as rows and features as columns. Sample
+IDs and feature names have to be row and column names respectively.
+E.g.:
+
+    head(clinical_data, n=3)
+
+    ##      age height
+    ## 7041 0.8    0.2
+    ## 7788 0.3    0.6
+    ## 7468 0.5    0.7
+
+For the other modalities (targeted, untargeted and methylomics) the
+input files are data frames with features as rows and samples as
+columns. Feature names and sample IDs have to be row and column names
+respectively. E.g.:
+
+    head(transcriptomics_data, n=3)
+
+    ##        3576 3327  3117
+    ## gene_1 6.14 9.58 10.16
+    ## gene_2 6.15 9.81 10.71
+    ## gene_3 6.02 8.81 10.72
+
+The pathway input files are named lists of character vectors. The names
+of the elements of the list are the names of the respective pathways and
+the elements of the character vectors are the names of the respective
+features present in the pathway. E.g.:
+
+    transcriptomics_pathways
+
+    ## $Metabolism
+    ## [1] "gene_1" "gene_2"
+    ## 
+    ## $`Immune response`
+    ## [1] "gene_2" "gene_3"
+
+Methylomics dualmap file????
+
+The genomics input files consist of .bed, .fam and .bim files, all with
+the same file prefix.
