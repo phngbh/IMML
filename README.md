@@ -21,11 +21,11 @@ For an in-depth usage guide please refer to the [vignette](./vignette.md).
 
 First run the feature selection workflow on your command line:
 ```
-nextflow ~/.../IMML/workflows/feature_selection.nf -params-file ~/.../IMML/workflows/FS_config.yml -c ~/.../IMML/nextflow.config
+nextflow run ~/.../IMML/workflows/feature_selection.nf -params-file ~/.../IMML/workflows/FS_config.yml -c ~/.../IMML/nextflow.config
 ```
 And then the model training workflow:
 ```
-nextflow ~/.../IMML/workflows/model_training.nf -params-file ~/.../IMML/workflows/MT_config.yml -c ~/.../IMML/nextflow.config
+nextflow run ~/.../IMML/workflows/model_training.nf -params-file ~/.../IMML/workflows/MT_config.yml -c ~/.../IMML/nextflow.config
 ```
 For more information on how to configure **nextflow** using the ```nextflow.config``` file, please refer to this link: https://www.nextflow.io/docs/latest/config.html. In order to use the IMML framework this file needs to include the path to the IMML conda environment:
 ```
