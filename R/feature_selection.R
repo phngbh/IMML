@@ -11,7 +11,7 @@ suppressMessages(library(fgsea))
 suppressMessages(library(pROC))
 suppressMessages(library(RobustRankAggreg))
 suppressMessages(library(globaltest))
-suppressMessages(library(RaMP))
+#suppressMessages(library(RaMP))
 suppressMessages(library(caret))
 suppressMessages(library(limma))
 

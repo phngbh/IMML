@@ -47,4 +47,5 @@ dependencies:
   - r-kernlab
   - r-nnls
   - r-themis
+  - r-ggalluvial
 prefix: /home/willy/miniconda3/envs/IMML
