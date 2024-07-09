@@ -22,6 +22,18 @@ environment:
     conda.enabled = true
     process.conda = '~/miniconda3/envs/IMML/'
 
+If you want to use this framework on a cluster, which uses `slurm` for
+job-schedueling, your `nextflow.config` file might look something like
+this:
+
+    process {
+        executor = 'slurm'
+        cpus = 2
+        memory = '8GB' # make sure to assign enough RAM, otherwise the processes might freeze
+        clusterOptions = '--partition=cpu_p --qos=cpu_normal --nice=10000' # flags passed to the sbatch command
+        conda = '/home/your_dir/miniconda3/envs/IMML/'
+    }
+
 Input file paths and and parameters are specified in the `FS_config.yml`
 and `MT_config.yml` files. As an example this is part of the
 `FS_config.yml` file:

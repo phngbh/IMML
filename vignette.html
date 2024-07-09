@@ -11,7 +11,7 @@
 
 <meta name="author" content="IMML Package" />
 
-<meta name="date" content="2024-07-01" />
+<meta name="date" content="2024-07-09" />
 
 <title>IMML - vignette</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">IMML - vignette</h1>
 <h4 class="author">IMML Package</h4>
-<h4 class="date">2024-07-01</h4>
+<h4 class="date">2024-07-09</h4>
 
 </div>
 
@@ -374,6 +374,16 @@ order to use the IMML framework this file needs to include the path to
 the IMML conda environment:</p>
 <pre><code>conda.enabled = true
 process.conda = &#39;~/miniconda3/envs/IMML/&#39;</code></pre>
+<p>If you want to use this framework on a cluster, which uses
+<code>slurm</code> for job-schedueling, your
+<code>nextflow.config</code> file might look something like this:</p>
+<pre><code>process {
+    executor = &#39;slurm&#39;
+    cpus = 2
+    memory = &#39;8GB&#39; # make sure to assign enough RAM, otherwise the processes might freeze
+    clusterOptions = &#39;--partition=cpu_p --qos=cpu_normal --nice=10000&#39; # flags passed to the sbatch command
+    conda = &#39;/home/your_dir/miniconda3/envs/IMML/&#39;
+}</code></pre>
 <p>Input file paths and and parameters are specified in the
 <code>FS_config.yml</code> and <code>MT_config.yml</code> files. As an
 example this is part of the <code>FS_config.yml</code> file:</p>
