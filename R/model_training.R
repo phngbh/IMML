@@ -1073,8 +1073,8 @@ fit_forwardSelectEnsemble = function(
       }
       formula <- as.formula(paste("y_train_best ~", paste(predictor_names, collapse = " + ")))
       
-      fit_meta = caret::train(x = x_train_i[arrange(base[[1]]$pred, Resample, rowIndex)$rowIndex,],
-                              y = y_train_best %>% as.factor(),
+      fit_meta = caret::train(formula,
+                              data = train_data,
                               method="glmnet",
                               metric="logLoss",
                               tuneLength = 20,
