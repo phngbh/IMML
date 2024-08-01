@@ -310,9 +310,17 @@ train_model <- function(
   #   grid <- NULL
   # }
   
+  train_data <- data.frame(y_train, x_train)
+  # Create a formula
+  predictor_names <- colnames(x_train)
+  if (length(predictor_names) == 0) {
+    stop("Error: x_train_d has no column names.")
+  }
+  formula <- as.formula(paste("y_train ~", paste(predictor_names, collapse = " + ")))
+  
   set.seed(seed)
-  fit <- caret::train(x = x_train,
-                      y = y_train,
+  fit <- caret::train(formula,
+                      data = train_data,
                       method= algorithm, 
                       metric=metric,
                       #tuneGrid = grid,
@@ -742,8 +750,18 @@ fit_ensemble = function(
   
   cat("Fit concatened dataset\n")
   set.seed(seed)
-  fit_cat <- caret::train(x = x_train_i,
-                          y = y_train,
+  
+  train_data <- data.frame(y_train, x_train_i)
+  
+  # Create a formula
+  predictor_names <- colnames(x_train_i)
+  if (length(predictor_names) == 0) {
+    stop("Error: x_train_d has no column names.")
+  }
+  formula <- as.formula(paste("y_train ~", paste(predictor_names, collapse = " + ")))
+  
+  fit_cat <- caret::train(formula,
+                          data = train_data,
                           method=algorithm, 
                           metric=metric,
                           tuneLength = 20,
@@ -757,30 +775,41 @@ fit_ensemble = function(
   cat("Fit individual datasets\n")
   #ef[[i]] = list()
   
-  sigl_var <- F 
-  for (d in names(data_list)){
+  sigl_var <- F
+  
+  for (d in names(data_list)) {
     
-    cat("...Data type: ",d,"\n")
+    cat("...Data type: ", d, "\n")
     
-    x_train_d = data_list[[d]][cv_list$outer$train[[i]],,drop=F]
-    if (ncol(x_train_d) == 1){
+    x_train_d <- data_list[[d]][cv_list$outer$train[[i]], , drop = FALSE]
+    
+    if (ncol(x_train_d) == 1) {
       x_train_d <- cbind(x_train_d, ranv = 0)
-      sigl_var <- T
+      sigl_var <- TRUE
     }
-    #x_test = data_list[[d]][cv_list$outer$test[[i]],]
+    
+    # Combine x_train_d and y_train into a single data frame
+    train_data <- data.frame(y_train, x_train_d)
+    
+    # Create a formula
+    predictor_names <- colnames(x_train_d)
+    if (length(predictor_names) == 0) {
+      stop("Error: x_train_d has no column names.")
+    }
+    formula <- as.formula(paste("y_train ~", paste(predictor_names, collapse = " + ")))
     
     set.seed(seed)
-    fit_d <- caret::train(x = x_train_d,
-                        y = y_train,
-                        method=algorithm, 
-                        metric=metric,
-                        tuneLength = 20,
-                        weights = weights_train, 
-                        maximize = maximize,
-                        trControl=my_control,
-                        importance = TRUE)
-    ef[[d]] = fit_d
+    fit_d <- caret::train(formula,
+                          data = train_data,
+                          method = algorithm, 
+                          metric = metric,
+                          tuneLength = 20,
+                          weights = weights_train, 
+                          maximize = maximize,
+                          trControl = my_control,
+                          importance = TRUE)
     
+    ef[[d]] <- fit_d
   }
   
   cat("Fit meta model and computing performance\n")
@@ -799,10 +828,21 @@ fit_ensemble = function(
   cat("...Best datasets include:\n")
   print(table(y_train_best))
   set.seed(seed)
+  
+  train_data <- data.frame(y_train_best %>% as.factor(), x_train_i[arrange(ef[[1]]$pred, Resample, rowIndex)$rowIndex,,drop = F])
+  
+  # Create a formula
+  predictor_names <- colnames(x_train_i[arrange(ef[[1]]$pred, Resample, rowIndex)$rowIndex,,drop = F])
+  if (length(predictor_names) == 0) {
+    stop("Error: x_train_d has no column names.")
+  }
+  formula <- as.formula(paste("y_train_best ~", paste(predictor_names, collapse = " + ")))
+  
+  
   fit_meta = caret::train(#x = preds,
                           #y = y_train[arrange(ef[[i]][[1]]$pred, Resample, rowIndex)$rowIndex],
-                          x = x_train_i[arrange(ef[[1]]$pred, Resample, rowIndex)$rowIndex,,drop = F],
-                          y = y_train_best %>% as.factor(),
+                          formula,
+                          data = train_data,
                           method="glmnet", 
                           metric="AUC",
                           tuneLength = 20, 
@@ -945,8 +985,18 @@ fit_forwardSelectEnsemble = function(
     x_train_d = data_list[[d]][cv_list$outer$train[[i]],]
     
     set.seed(seed)
-    fit_d <- caret::train(x = x_train_d,
-                          y = y_train,
+    
+    train_data <- data.frame(y_train, x_train_d)
+    
+    # Create a formula
+    predictor_names <- colnames(x_train_d)
+    if (length(predictor_names) == 0) {
+      stop("Error: x_train_d has no column names.")
+    }
+    formula <- as.formula(paste("y_train ~", paste(predictor_names, collapse = " + ")))
+    
+    fit_d <- caret::train(formula,
+                          data = train_data,
                           method="glmnet", 
                           metric=metric,
                           tuneLength = 20,
@@ -1013,6 +1063,16 @@ fit_forwardSelectEnsemble = function(
       # print(table(y_train_best))
 
       set.seed(seed)
+      
+      train_data <- data.frame(y_train_best %>% as.factor(), x_train_i[arrange(base[[1]]$pred, Resample, rowIndex)$rowIndex,])
+      
+      # Create a formula
+      predictor_names <- colnames(x_train_i[arrange(base[[1]]$pred, Resample, rowIndex)$rowIndex,])
+      if (length(predictor_names) == 0) {
+        stop("Error: x_train_d has no column names.")
+      }
+      formula <- as.formula(paste("y_train_best ~", paste(predictor_names, collapse = " + ")))
+      
       fit_meta = caret::train(x = x_train_i[arrange(base[[1]]$pred, Resample, rowIndex)$rowIndex,],
                               y = y_train_best %>% as.factor(),
                               method="glmnet",
